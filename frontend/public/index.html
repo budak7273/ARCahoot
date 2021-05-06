@@ -12,10 +12,55 @@
 
 <body>
   <nav class="navbar navbar-dark fixed-top">
-    <a class="navbar-brand" href="#">ARCahoot</a>
+    <a class="navbar-brand" href="/">ARCahoot</a>
+
+    <div class="d-sm-none">X-Small</div>
+    <div class="d-none d-sm-block d-md-none">Small</div>
+    <div class="d-none d-md-block d-lg-none">Medium</div>
+    <div class="d-none d-lg-block d-xl-none">Large</div>
+    <div class="d-none d-xl-block">X-Large</div>
+
   </nav>
-  <div id="mainPage" class="container page-container">
-    <p>Hello World!</p>
+  <div id="entryPage" class="container page-container">
+    
+    <div>
+      <h1 class="center">Currently Playing</h1>
+      <div id="connectedPlayers" class="container">
+        <ul class="">
+          <div><p>Player 1</p></div>
+          <div><p>Another Player</p></div>
+          <div><p>Rob</p></div>
+          <div><p>Caleb</p></div>
+          <div><p>Aaron Wilkin</p></div>
+          <div><p>Alex</p></div>
+        </ul>
+      </div>
+    </div>
+
+    <div id="roomDetails" class="container justify-content-center">
+      <h1 class="center">Room Key: HHTPZ</h1>
+      <button id="startGameButton" type="button" class="btn btn-block btn-outline-primary">Start Game!</button>
+    </div>
+  </div>
+  <div id="questionsPage" class="container page-container" style="display:none">
+    <div class="row justify-content-center">
+      <div class="questionBox">
+        <h1>
+          What does a client use to connect to a server?
+        <h1>
+      </div>
+      <div class="col-6">
+        <button id="answerButton1" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="1">Unicorns and Rainbows</button>
+      </div>
+      <div class="col-6">
+        <button id="answerButton2" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="2">The SGA Budget</button>
+      </div>
+      <div class="col-6">
+        <button id="answerButton3" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="3">Final Exams</button>
+      </div>
+      <div class="col-6">
+        <button id="answerButton4" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="4">Sockets</button>
+      </div>
   </div>
   <script src="scripts/jquery.min.js"></script>
   <script src="scripts/popper.js"></script>

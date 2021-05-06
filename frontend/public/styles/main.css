@@ -10,3 +10,32 @@ body {
 .page-container {
     margin-top: 75px;
 }
+
+#roomDetails {
+    padding-top: 30px;
+    text-align: center;
+    justify-content: center;
+}
+
+#connectedPlayers {
+    column-count: 3;
+    column-gap: 5px;
+    border-style: solid;
+    margin-top: 5px;
+    padding: 10px;
+
+    /* Center images that are too small in their
+       cols and would otherwise be left aligned*/
+    /* text-align: center; */
+}
+
+#startGameButton {
+    background-color: #bedbdd;
+    width: 557px;
+}
+
+.questionBox {
+    border-style: solid;
+    margin-bottom: 20px;
+    padding: 30px;
+}

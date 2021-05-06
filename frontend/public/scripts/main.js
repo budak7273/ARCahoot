@@ -10,16 +10,29 @@
 var rhit = rhit || {};
 
 /** globals */
-rhit.variableName = "";
+rhit.PageManagerSingleton = "";
 
-/** function and class syntax examples */
-rhit.functionName = function () {
-	/** function body */
-};
-
-rhit.ClassName = class {
+rhit.PageController = class {
 	constructor() {
+		document.querySelector("#startGameButton").onclick = (event) => {
+			console.log("Starting Game");
+			document.querySelector("#entryPage").style.display = "none";
+			document.querySelector("#questionsPage").style.display = "block";
+		}
 
+		document.querySelectorAll(".answer-button").forEach((element) => {
+			console.log("Answer button clicked:", element.dataset.item);
+		});
+	}
+
+	methodName() {
+
+	}
+}
+
+rhit.PageManager = class {
+	constructor() {
+		console.log("Page Manager Built");
 	}
 
 	methodName() {
@@ -30,7 +43,11 @@ rhit.ClassName = class {
 /* Main */
 /** function and class syntax examples */
 rhit.main = function () {
+	new rhit.PageController();
+	rhit.PageManagerSingleton = new rhit.PageManager();
+
 	console.log("Ready");
+
 };
 
 rhit.main();
