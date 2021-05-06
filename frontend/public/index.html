@@ -23,29 +23,24 @@
   </nav>
   <div id="entryPage" class="container page-container">
     
-    <div>
-      <h1 class="center">Currently Playing</h1>
-      <div id="connectedPlayers" class="container">
-        <ul class="">
-          <div><p>Player 1</p></div>
-          <div><p>Another Player</p></div>
-          <div><p>Rob</p></div>
-          <div><p>Caleb</p></div>
-          <div><p>Aaron Wilkin</p></div>
-          <div><p>Alex</p></div>
-        </ul>
+    <div id="roomDetails" class="container">
+      <div class="row justify-content-center">
+        <h1 id="roomKey" class="center row">Room Key: Loading...</h1>
+      </div>
+      <div class="row justify-content-center">
+        <button id="startGameButton" type="button" class="row btn btn-block btn-outline-primary">Start Game!</button>
       </div>
     </div>
-
-    <div id="roomDetails" class="container justify-content-center">
-      <h1 class="center">Room Key: HHTPZ</h1>
-      <button id="startGameButton" type="button" class="btn btn-block btn-outline-primary">Start Game!</button>
+    <h1 class="center">Currently Playing</h1>
+    <div id="connectedPlayers" class="container">
+      <!-- Will be filled by JS at runtime  -->
     </div>
+
   </div>
   <div id="questionsPage" class="container page-container" style="display:none">
     <div class="row justify-content-center">
       <div class="questionBox">
-        <h1>
+        <h1 id="questionText">
           What does a client use to connect to a server?
         <h1>
       </div>
