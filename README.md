@@ -16,7 +16,7 @@ See the README in that folder for info on the frontend.
 
 Backend for the ARCahoot project. Manages connections with clients and runs games. Does not serve website files to client - frontend's Firebase hosting does that.
 
-### Usage
+### Backend Usage
 
 To get started, run `npm install`.
 
@@ -33,6 +33,8 @@ Currently listens on port 8000 for consistency with the Heroku deploy.
 Use ESLint to ensure you follow style conventions. Follow the directions in `eslint-setup.md` to set up ESLint.
 
 ### Deploy to Heroku
+
+Since we do not currently use Heroku to serve the frontend, this deploy only needs to happen when changes to the backend is made. To deploy the frontend, follow the directions in its readme instead.
 
 Make sure you have Heroku CLI set up, as explained [here](https://devcenter.heroku.com/articles/heroku-cli), and linked to your github account.
 
@@ -51,3 +53,11 @@ To deploy:
 ```bash
 git push heroku main
 ```
+
+To turn off the deployment, scale the app down to 0 instances.
+
+```bash
+heroku ps:scale web=0
+```
+
+To turn on the deployment, scale the app to 1 instance instead of 0. Project not currently designed to support multiple instances.

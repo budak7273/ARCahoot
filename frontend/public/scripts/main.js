@@ -49,6 +49,8 @@ rhit.PageManager = class {
 	constructor() {
 		console.log("Page Manager Built");
 		this.roomKey = "HHTPZ";
+		this.serverAddress = this.determineServerAddress();
+		console.log("Server address is ", this.serverAddress);
 
 		// TODO switch to actual loading instead of fake data
 		this.updateRoomKey();
@@ -57,6 +59,10 @@ rhit.PageManager = class {
 			const playerCard = this._createPlayerItem(`Player ${index}`);
 			playerList.appendChild(playerCard);
 		}
+	}
+
+	determineServerAddress() {
+		return window.location.href.includes("localhost") ? "http://localhost:8000/" : "https://arcahoot.herokuapp.com/";
 	}
 
 	updateRoomKey(key) {

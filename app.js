@@ -3,10 +3,6 @@ const express = require('express');
 const app = express();
 app.use(express.static("public"));
 
-let port = process.env.PORT;
-if (port == null || port == "") {
-	port = 8000;
-}
 
 // This server exists to manage the actual game. It does not (currently) provide any of the website files.
 // We will need to do stuff with websockets (probably?) to maintain a connection with each client.
@@ -14,6 +10,18 @@ if (port == null || port == "") {
 
 // Special info about WebSockets on Heroku:
 // https://devcenter.heroku.com/articles/websockets
+
+
+// Must stay 8000 for Heroku.
+// `process.env.PORT` seems to read from 5000 from the frontend folder's running firebase serve
+// Eventually fix that and figure out why
+const port = 8000;
+/*
+let port = process.env.PORT;
+if (port == null || port == "") {
+	port = 8000;
+}
+*/
 
 app.get("/", (req, res) => {
 	res.json({message: "Hello, world!"});
