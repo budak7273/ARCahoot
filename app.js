@@ -3,10 +3,21 @@ const express = require('express');
 const app = express();
 app.use(express.static("public"));
 
-// TODO - this is just a copy of the CSSE280 Tic Tac Toe server right now.
+let port = process.env.PORT;
+if (port == null || port == "") {
+	port = 8000;
+}
+
 // This server exists to manage the actual game. It does not (currently) provide any of the website files.
 // We will need to do stuff with websockets (probably?) to maintain a connection with each client.
 // Possibly helpful: https://medium.com/hackernoon/implementing-a-websocket-server-with-node-js-d9b78ec5ffa8
+
+// Special info about WebSockets on Heroku:
+// https://devcenter.heroku.com/articles/websockets
+
+app.get("/", (req, res) => {
+	res.json({message: "Hello, world!"});
+});
 
 app.get("/api/getmove/:board", (req, res) => {
 	const boardString = req.params.board;
@@ -29,5 +40,5 @@ function getOpenLocations(boardString) {
 	return openLocations;
 }
 
-
-app.listen(3000);
+console.log(`Listening on port ${port}...`);
+app.listen(port);
