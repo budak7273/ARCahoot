@@ -8,6 +8,7 @@
 
 /* eslint-disable no-var */
 var rhit = rhit || {};
+var socket = socket || {};
 /* eslint-enable no-var */
 
 /** globals */
@@ -39,21 +40,19 @@ rhit.PageController = class {
 			};
 		});
 	}
-
-	methodName() {
-
-	}
 };
 
 rhit.PageManager = class {
 	constructor() {
 		console.log("Page Manager Built");
-		this.roomKey = "HHTPZ";
 		this.serverAddress = this.determineServerAddress();
+		this.connectionInfo = {};
 		console.log("Server address is ", this.serverAddress);
 
-		// TODO switch to actual loading instead of fake data
-		this.updateRoomKey();
+		this.connectToWsServer();
+	}
+
+	loadConnectedPlayers() {
 		const playerList = document.querySelector("#connectedPlayers");
 		for (let index = 0; index < 10; index++) {
 			const playerCard = this._createPlayerItem(`Player ${index}`);
@@ -61,12 +60,72 @@ rhit.PageManager = class {
 		}
 	}
 
+	connectToWsServer() {
+		// Create WebSocket connection.
+		console.log("Attempting to connect to %s...", this.serverAddress);
+
+		socket = new WebSocket(this.serverAddress);
+
+		// Connection opened
+		socket.addEventListener('open', (event) => {
+			this.connectionInfo.wasEverConnected = true;
+			console.log("Connection formed!", event);
+			this.sendMessage("greetings", "Hello server!");
+		});
+
+		// Connection closed
+		socket.addEventListener('close', (event) => {
+			console.log("WS connection closed", event);
+			if (this.connectionInfo.wasEverConnected) {
+				alert("You have lost connection to the game server!");
+			} else {
+				alert("Could not connect to the server. It might be down.");
+			}
+		});
+
+		// Listen for messages
+		socket.addEventListener('message', (event) => {
+			const messageRaw = event.data;
+			let message;
+			try {
+				message = JSON.parse(messageRaw);
+			} catch (error) {
+				console.warn("Message was not in JSON form: ", messageRaw);
+				return;
+			}
+
+			switch (message.Purpose) {
+			case "roomkey":
+				console.log("Received a message containing the Roomkey ", message.Data);
+				this.updateRoomKey(message.Data);
+
+				this.loadConnectedPlayers();
+				break;
+			case "question_info":
+
+			default:
+				console.warn("Received message of unknown purpose:", message);
+				break;
+			}
+		});
+	}
+
+	sendMessage(purpose, data) {
+		if (socket) {
+			const messageStr = JSON.stringify({"Purpose": purpose, "Data": data});
+			socket.send(messageStr);
+		} else {
+			console.error("Tried to send when the socket was not yet set up");
+		}
+	}
+
 	determineServerAddress() {
-		return window.location.href.includes("localhost") ? "http://localhost:8000/" : "https://arcahoot.herokuapp.com/";
+		// TODO make sure heroku server address is correct
+		return window.location.href.includes("localhost") ? "ws://localhost:8080" : "ws://arcahoot.herokuapp.com:";
 	}
 
 	updateRoomKey(key) {
-		document.querySelector("#roomKey").innerHTML = `Room Key: ${this.roomKey}`;
+		document.querySelector("#roomKey").innerHTML = `Room Key: ${key}`;
 	}
 
 	addPlayerToList(name) {

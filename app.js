@@ -22,31 +22,65 @@ if (port == null || port == "") {
 	port = 8000;
 }
 */
+const ws_port = 8080;
+
+const questions = [
+	"What port do you connect to on the localhost?",
+	"Which of the following is an actual method of connecting a client to a server?",
+	"What is x: 2x+1=5"];
+
+const answers = [
+	["5000", "8000", "1000", "0"],
+	["TCP", "Messager Pigeon", "Mail Service", "Webpage"],
+	["0", "1", "2", "5"]];
 
 app.get("/", (req, res) => {
-	res.json({message: "Hello, world!"});
+	res.send(`Visit <a href="https://arcahoot.web.app/">the site</a> to play`);
 });
 
-app.get("/api/getmove/:board", (req, res) => {
-	const boardString = req.params.board;
-	const openLocs = getOpenLocations(boardString);
+const WebSocket = require('ws');
 
-	const moveSelected = openLocs[Math.floor(Math.random() * openLocs.length)];
+const wss = new WebSocket.Server({port: ws_port});
 
-	console.log(boardString);
-	// res.json({boardString: boardString});
-	res.json({"move": moveSelected});
-});
+wss.on('connection', function connection(ws, req) {
+	console.log("Connection established with", ws._socket.remoteAddress);
 
-function getOpenLocations(boardString) {
-	const openLocations = [];
-	for (let index = 0; index < boardString.length; index++) {
-		if (boardString.charAt(index) == '-') {
-			openLocations.push(index);
+	ws.on('message', function incoming(message) {
+		try {
+			message = JSON.parse(message);
+			console.log('received: %s', message);
+		} catch (error) {
+			// Silently error
+			// console.error(error);
+			return;
 		}
-	}
-	return openLocations;
-}
+	});
+
+	const roomkey = makeRoomKey();
+
+	sendJson(ws, "roomkey", roomkey);
+	sendJson(ws, "hello", "Hi there");
+
+	const index = Math.floor(Math.random() * questions.length);
+	sendJson(ws, "question_info", {
+		question: questions[index],
+		answers: answers[index],
+	});
+});
+
+const sendJson = (ws, purpose, data) => {
+	const messageStr = JSON.stringify({"Purpose": purpose, "Data": data});
+	ws.send(messageStr);
+};
+
+const makeRoomKey = () => {
+	const roomKeyAlphabet = "ABCDEFHIJKLMNOPQRSTUVWXYZ";
+	const randomLetter = () => {
+		return roomKeyAlphabet[Math.floor(Math.random() * roomKeyAlphabet.length)];
+	};
+	return randomLetter() + randomLetter() + randomLetter() + randomLetter() + randomLetter();
+};
 
 console.log(`Listening on port ${port}...`);
+console.log(`WebSocket server listening on port ${ws_port}...`);
 app.listen(port);
