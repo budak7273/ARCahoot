@@ -1,4 +1,5 @@
 const express = require('express');
+const {v4: uuidv4} = require('uuid');
 
 const app = express();
 app.use(express.static("public"));
@@ -11,6 +12,8 @@ app.use(express.static("public"));
 // Special info about WebSockets on Heroku:
 // https://devcenter.heroku.com/articles/websockets
 
+
+// Consider heartbeat connection maintain https://www.npmjs.com/package/ws#how-to-detect-and-close-broken-connections
 
 // Must stay 8000 for Heroku.
 // `process.env.PORT` seems to read from 5000 from the frontend folder's running firebase serve
@@ -50,16 +53,22 @@ wss.on('connection', function connection(ws, req) {
 			message = JSON.parse(message);
 			console.log('received: %s', message);
 		} catch (error) {
-			// Silently error
-			// console.error(error);
+			// Silently ignore message
 			return;
 		}
 	});
 
+	ws.on('close', (params) => {
+		console.log("Connection closed");
+	});
+
+	// TODO respond to specific messages instead of bursting everything
+
 	const roomkey = makeRoomKey();
 
 	sendJson(ws, "roomkey", roomkey);
-	sendJson(ws, "hello", "Hi there");
+	// sendJson(ws, "hello", "Hi there");
+	sendJson(ws, "your_id", uuidv4());
 
 	const index = Math.floor(Math.random() * questions.length);
 	sendJson(ws, "question_info", {
@@ -74,7 +83,7 @@ const sendJson = (ws, purpose, data) => {
 };
 
 const makeRoomKey = () => {
-	const roomKeyAlphabet = "ABCDEFHIJKLMNOPQRSTUVWXYZ";
+	const roomKeyAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	const randomLetter = () => {
 		return roomKeyAlphabet[Math.floor(Math.random() * roomKeyAlphabet.length)];
 	};

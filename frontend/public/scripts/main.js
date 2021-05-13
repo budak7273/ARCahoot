@@ -9,6 +9,7 @@
 /* eslint-disable no-var */
 var rhit = rhit || {};
 var socket = socket || {};
+var connectionInfo = connectionInfo || {};
 /* eslint-enable no-var */
 
 /** globals */
@@ -46,7 +47,6 @@ rhit.PageManager = class {
 	constructor() {
 		console.log("Page Manager Built");
 		this.serverAddress = this.determineServerAddress();
-		this.connectionInfo = {};
 		console.log("Server address is ", this.serverAddress);
 
 		this.connectToWsServer();
@@ -62,21 +62,21 @@ rhit.PageManager = class {
 
 	connectToWsServer() {
 		// Create WebSocket connection.
-		console.log("Attempting to connect to %s...", this.serverAddress);
+		console.log("🔌 Attempting to connect to %s...", this.serverAddress);
 
 		socket = new WebSocket(this.serverAddress);
 
 		// Connection opened
 		socket.addEventListener('open', (event) => {
-			this.connectionInfo.wasEverConnected = true;
-			console.log("Connection formed!", event);
+			connectionInfo.wasEverConnected = true;
+			console.log("🔌 Connection formed!", event);
 			this.sendMessage("greetings", "Hello server!");
 		});
 
 		// Connection closed
 		socket.addEventListener('close', (event) => {
-			console.log("WS connection closed", event);
-			if (this.connectionInfo.wasEverConnected) {
+			console.log("🔌 WS connection closed", event);
+			if (connectionInfo.wasEverConnected) {
 				alert("You have lost connection to the game server!");
 			} else {
 				alert("Could not connect to the server. It might be down.");
@@ -89,6 +89,7 @@ rhit.PageManager = class {
 			let message;
 			try {
 				message = JSON.parse(messageRaw);
+				console.log("🔌 Got message:", message.Purpose, message.Data);
 			} catch (error) {
 				console.warn("Message was not in JSON form: ", messageRaw);
 				return;
@@ -96,15 +97,18 @@ rhit.PageManager = class {
 
 			switch (message.Purpose) {
 			case "roomkey":
-				console.log("Received a message containing the Roomkey ", message.Data);
+				console.log("🔌 Received a message containing the Roomkey ", message.Data);
 				this.updateRoomKey(message.Data);
 
 				this.loadConnectedPlayers();
 				break;
 			case "question_info":
-
+				break;
+			case "your_id":
+				connectionInfo.uuid = message.Data;
+				break;
 			default:
-				console.warn("Received message of unknown purpose:", message);
+				console.warn("🔌 Received message of unknown purpose:", message);
 				break;
 			}
 		});
