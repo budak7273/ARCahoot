@@ -54,8 +54,7 @@ rhit.PageController = class {
 rhit.PageManager = class {
 	constructor() {
 		console.log("Page Manager Built. Getting server address...");
-		this.getAddressThen((params) => {
-			console.log("Thenned with", params);
+		this.getAddressThen(() => {
 			this.connectToWsServer();
 		});
 	}
@@ -159,7 +158,6 @@ rhit.PageManager = class {
 	}
 
 	respondToYourID(data) {
-		console.log(data);
 		if (connectionInfo.wasEverConnected) {
 			const oldUUID = connectionInfo.uuid;
 			connectionInfo.uuid = data;
@@ -181,6 +179,7 @@ rhit.PageManager = class {
 		if (connectionInfo.retryCounter + 1 > MAX_RETRIES) {
 			alert(`Failed to re-establish connection to game server after ${MAX_RETRIES} tries`);
 		} else {
+			connectionInfo.isRetrying = true;
 			connectionInfo.retryCounter++;
 			setTimeout(() => {
 				console.log(`🏓 Attempting to re-connect (try ${connectionInfo.retryCounter} of ${MAX_RETRIES})...`);
@@ -205,7 +204,7 @@ rhit.PageManager = class {
 		if (isLocalhost) {
 			return "ws://localhost:8000";
 		} else {
-			return location.origin.replace(/^http/, 'ws');;
+			return location.origin.replace(/^http/, 'ws');
 		}
 	}
 
