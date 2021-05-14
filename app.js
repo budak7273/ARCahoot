@@ -82,7 +82,7 @@ wss.on('connection', function connection(ws, req) {
 					uuid_to_ws[clientUUIDToRestore].socket = ws;
 					sendJson(ws, "reconnect_me_confirm", clientUUIDToRestore);
 				} else {
-					console.log("Refused client reconnect");
+					console.log("Refused client reconnect (uuid not on record)");
 					sendJson(ws, "reconnect_me_deny", clientUUIDToInvalidate);
 				}
 				break;
@@ -150,4 +150,4 @@ app.get("/info/ws_to_uuids", (req, res) => {
 
 
 console.log(`Listening on port ${port}...`);
-app.listen(port);
+app.listen(port, '0.0.0.0');
