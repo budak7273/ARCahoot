@@ -53,11 +53,17 @@ rhit.PageController = class {
 
 rhit.PageManager = class {
 	constructor() {
-		console.log("Page Manager Built");
-		this.serverAddress = this.determineServerAddress();
-		console.log("Server address is ", this.serverAddress);
+		console.log("Page Manager Built. Getting server address...");
+		this.getAddressThen((params) => {
+			console.log("Thenned with", params);
+			this.connectToWsServer();
+		});
+	}
 
-		this.connectToWsServer();
+	async getAddressThen(callbackWhenDone) {
+		this.serverAddress = await this.determineServerAddress();
+		console.log("Server address is ", this.serverAddress);
+		await callbackWhenDone();
 	}
 
 	loadConnectedPlayers(playerData) {
@@ -192,12 +198,15 @@ rhit.PageManager = class {
 		}
 	}
 
-	determineServerAddress() {
-		// TODO make sure heroku server address is correct
-		const HOST = location.origin.replace(/^http/, 'ws');
-		console.log("HOST", HOST);
-
-		return window.location.href.includes("localhost") ? "ws://localhost:8000" : "wss://arcahoot.herokuapp.com";
+	// Made this async because I thought we would have to contact the server
+	// to find the right port, but looks like that sorts itself out. -Rob
+	async determineServerAddress() {
+		const isLocalhost = window.location.href.includes("localhost");
+		if (isLocalhost) {
+			return "ws://localhost:8000";
+		} else {
+			return location.origin.replace(/^http/, 'ws');;
+		}
 	}
 
 	updateRoomKey(key) {
