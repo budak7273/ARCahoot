@@ -194,7 +194,7 @@ rhit.PageManager = class {
 
 	determineServerAddress() {
 		// TODO make sure heroku server address is correct
-		return window.location.href.includes("localhost") ? "ws://localhost:8080" : "ws://arcahoot.herokuapp.com:";
+		return window.location.href.includes("localhost") ? "ws://localhost:3000" : "wss://arcahoot.herokuapp.com";
 	}
 
 	updateRoomKey(key) {

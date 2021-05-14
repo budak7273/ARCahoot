@@ -21,7 +21,7 @@ if (port == null || port == "") {
 	port = 8000;
 }
 */
-const ws_port = 8080;
+const ws_port = 3000;
 
 const questions = [
 	"What port do you connect to on the localhost?",
