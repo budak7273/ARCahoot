@@ -9,7 +9,7 @@
 /* eslint-disable no-var */
 var rhit = rhit || {};
 var socket = socket || {};
-var connectionInfo = connectionInfo || {
+var connectionInfo = {
 	uuid: "UNSET",
 	isRetrying: false,
 	wasEverConnected: false,
@@ -60,7 +60,7 @@ rhit.PageManager = class {
 		this.connectToWsServer();
 	}
 
-	loadConnectedPlayers() {
+	loadConnectedPlayers(playerData) {
 		const playerList = document.querySelector("#connectedPlayers");
 		for (let index = 0; index < 10; index++) {
 			const playerCard = this._createPlayerItem(`Player ${index}`);
@@ -135,15 +135,15 @@ rhit.PageManager = class {
 				console.log("TODO question info setting");
 				break;
 			case "your_id":
-				this.respondToYourID(message.data);
+				this.respondToYourID(message.Data);
 				break;
 			case "reconnect_me_confirm":
 				console.log("Accepted reconnect");
-				connectionInfo.uuid = message.data;
+				connectionInfo.uuid = message.Data;
 				break;
 			case "reconnect_me_deny":
-				console.log("Denied reconnect");
-				connectionInfo.uuid = message.data;
+				console.log("Denied reconnect. Using new UUID %s instead.", message.Data);
+				connectionInfo.uuid = message.Data;
 				break;
 			default:
 				console.warn("🔌 Received message of unknown purpose:", message);
@@ -153,9 +153,12 @@ rhit.PageManager = class {
 	}
 
 	respondToYourID(data) {
+		console.log(data);
 		if (connectionInfo.wasEverConnected) {
-			console.log("Attempting to re-establish old UUID");
-			this.sendMessage("reconnect_me", connectionInfo.uuid);
+			const oldUUID = connectionInfo.uuid;
+			connectionInfo.uuid = data;
+			console.log("Attempting to re-establish old UUID ", oldUUID);
+			this.sendMessage("reconnect_me", oldUUID);
 		} else {
 			connectionInfo.uuid = data;
 			connectionInfo.wasEverConnected = true;
@@ -170,7 +173,7 @@ rhit.PageManager = class {
 
 	attemptReconnect() {
 		if (connectionInfo.retryCounter + 1 > MAX_RETRIES) {
-			alert("Failed to re-establish connection to game server");
+			alert(`Failed to re-establish connection to game server after ${MAX_RETRIES} tries`);
 		} else {
 			connectionInfo.retryCounter++;
 			setTimeout(() => {

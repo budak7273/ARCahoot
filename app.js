@@ -33,7 +33,7 @@ const answers = [
 	["TCP", "Messager Pigeon", "Mail Service", "Webpage"],
 	["0", "1", "2", "5"]];
 
-const live_clients = {};
+const uuid_to_ws = {};
 const ws_to_uuids = {};
 
 const rooms = {};
@@ -75,15 +75,17 @@ wss.on('connection', function connection(ws, req) {
 			case "reconnect_me":
 				const clientUUIDToInvalidate = message.UUID;
 				const clientUUIDToRestore = message.Data;
-				if (live_clients[oldUUID]) {
+				console.log("Client %s is trying to restore to old UUID %s", clientUUIDToInvalidate, clientUUIDToRestore);
+				if (uuid_to_ws[clientUUIDToRestore]) {
 					releaseClient(clientUUIDToInvalidate);
 					console.log("Allowed client to reconnect");
-					live_clients[oldUUID].socket = ws;
+					uuid_to_ws[clientUUIDToRestore].socket = ws;
 					sendJson(ws, "reconnect_me_confirm", clientUUIDToRestore);
 				} else {
 					console.log("Refused client reconnect");
 					sendJson(ws, "reconnect_me_deny", clientUUIDToInvalidate);
 				}
+				break;
 			default:
 				console.warn("🔌 Received message of unknown purpose:", message);
 				break;
@@ -101,13 +103,13 @@ wss.on('connection', function connection(ws, req) {
 
 const addNewClient = (uuid, ws) => {
 	ws_to_uuids[ws] = uuid;
-	live_clients[uuid] = {socket: ws};
+	uuid_to_ws[uuid] = {socket: ws};
 };
 
 const releaseClient = (uuid, ws) => {
 	// Further closing logic?
 	delete ws_to_uuids[ws];
-	delete live_clients[uuid];
+	delete uuid_to_ws[uuid];
 };
 
 const sendJson = (ws, purpose, data) => {
@@ -136,12 +138,12 @@ app.get("/", (req, res) => {
 });
 
 
-app.get("/info/live_clients", (req, res) => {
+app.get("/info/uuid_to_ws", (req, res) => {
 	console.log("Received HTTP request");
-	res.json({live_clients: live_clients});
+	res.json({uuid_to_ws: uuid_to_ws});
 });
 
-app.get("/info/uuids", (req, res) => {
+app.get("/info/ws_to_uuids", (req, res) => {
 	console.log("Received HTTP request");
 	res.json({ws_to_uuids: ws_to_uuids});
 });
