@@ -1,10 +1,6 @@
 const express = require('express');
 const {v4: uuidv4} = require('uuid');
 
-const app = express();
-app.use(express.static("public"));
-
-
 // This server exists to manage the actual game. It does not (currently) provide any of the website files.
 // We will need to do stuff with websockets (probably?) to maintain a connection with each client.
 // Possibly helpful: https://medium.com/hackernoon/implementing-a-websocket-server-with-node-js-d9b78ec5ffa8
@@ -37,9 +33,10 @@ const answers = [
 	["TCP", "Messager Pigeon", "Mail Service", "Webpage"],
 	["0", "1", "2", "5"]];
 
-app.get("/", (req, res) => {
-	res.send(`Visit <a href="https://arcahoot.web.app/">the site</a> to play`);
-});
+const live_clients = {};
+const ws_to_uuids = {};
+
+const rooms = {};
 
 const WebSocket = require('ws');
 
@@ -48,10 +45,49 @@ const wss = new WebSocket.Server({port: ws_port});
 wss.on('connection', function connection(ws, req) {
 	console.log("Connection established with", ws._socket.remoteAddress);
 
-	ws.on('message', function incoming(message) {
+	const newClientUUID = uuidv4();
+	addNewClient(newClientUUID, ws);
+	sendJson(ws, "your_id", newClientUUID);
+
+	ws.on('message', function incoming(messageRaw) {
+		let message;
 		try {
-			message = JSON.parse(message);
-			console.log('received: %s', message);
+			try {
+				message = JSON.parse(messageRaw);
+				console.log("🔌 Got message:", message.Purpose, message.Data);
+			} catch (error) {
+				console.warn("Message was not in JSON form: ", messageRaw);
+				return;
+			}
+
+			switch (message.Purpose) {
+			case "roomkey_new":
+				const roomkey = makeRoomKey();
+				sendJson(ws, "roomkey", roomkey);
+				break;
+			case "question_details":
+				const index = Math.floor(Math.random() * questions.length);
+				sendJson(ws, "question_info", {
+					question: questions[index],
+					answers: answers[index],
+				});
+				break;
+			case "reconnect_me":
+				const clientUUIDToInvalidate = message.UUID;
+				const clientUUIDToRestore = message.Data;
+				if (live_clients[oldUUID]) {
+					releaseClient(clientUUIDToInvalidate);
+					console.log("Allowed client to reconnect");
+					live_clients[oldUUID].socket = ws;
+					sendJson(ws, "reconnect_me_confirm", clientUUIDToRestore);
+				} else {
+					console.log("Refused client reconnect");
+					sendJson(ws, "reconnect_me_deny", clientUUIDToInvalidate);
+				}
+			default:
+				console.warn("🔌 Received message of unknown purpose:", message);
+				break;
+			}
 		} catch (error) {
 			// Silently ignore message
 			return;
@@ -59,26 +95,23 @@ wss.on('connection', function connection(ws, req) {
 	});
 
 	ws.on('close', (params) => {
-		console.log("Connection closed");
-	});
-
-	// TODO respond to specific messages instead of bursting everything
-
-	const roomkey = makeRoomKey();
-
-	sendJson(ws, "roomkey", roomkey);
-	// sendJson(ws, "hello", "Hi there");
-	sendJson(ws, "your_id", uuidv4());
-
-	const index = Math.floor(Math.random() * questions.length);
-	sendJson(ws, "question_info", {
-		question: questions[index],
-		answers: answers[index],
+		console.log("Connection closed", params);
 	});
 });
 
+const addNewClient = (uuid, ws) => {
+	ws_to_uuids[ws] = uuid;
+	live_clients[uuid] = {socket: ws};
+};
+
+const releaseClient = (uuid, ws) => {
+	// Further closing logic?
+	delete ws_to_uuids[ws];
+	delete live_clients[uuid];
+};
+
 const sendJson = (ws, purpose, data) => {
-	const messageStr = JSON.stringify({"Purpose": purpose, "Data": data});
+	const messageStr = JSON.stringify({"Purpose": purpose, "Data": data, "UUID": "SERVER"});
 	ws.send(messageStr);
 };
 
@@ -90,6 +123,29 @@ const makeRoomKey = () => {
 	return randomLetter() + randomLetter() + randomLetter() + randomLetter() + randomLetter();
 };
 
-console.log(`Listening on port ${port}...`);
 console.log(`WebSocket server listening on port ${ws_port}...`);
+
+
+// Web server setup
+
+const app = express();
+app.use(express.static("public"));
+
+app.get("/", (req, res) => {
+	res.send(`Visit <a href="https://arcahoot.web.app/">the site</a> to play`);
+});
+
+
+app.get("/info/live_clients", (req, res) => {
+	console.log("Received HTTP request");
+	res.json({live_clients: live_clients});
+});
+
+app.get("/info/uuids", (req, res) => {
+	console.log("Received HTTP request");
+	res.json({ws_to_uuids: ws_to_uuids});
+});
+
+
+console.log(`Listening on port ${port}...`);
 app.listen(port);

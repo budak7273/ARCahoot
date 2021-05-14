@@ -9,11 +9,19 @@
 /* eslint-disable no-var */
 var rhit = rhit || {};
 var socket = socket || {};
-var connectionInfo = connectionInfo || {};
+var connectionInfo = connectionInfo || {
+	uuid: "UNSET",
+	isRetrying: false,
+	wasEverConnected: false,
+	retryCounter: 0,
+};
 /* eslint-enable no-var */
 
 /** globals */
 rhit.PageManagerSingleton = "";
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
 
 // From https://stackoverflow.com/a/35385518/12693560
 /**
@@ -66,20 +74,41 @@ rhit.PageManager = class {
 
 		socket = new WebSocket(this.serverAddress);
 
+		// Connection error (or never connected)
+		socket.addEventListener('error', (event) => {
+			// console.error("🔌 Error:", event);
+			if (connectionInfo.wasEverConnected) {
+				connectionInfo.isRetrying = true;
+				this.attemptReconnect();
+			} else {
+				// Never established first connection, so don't retry
+				alert("Could not connect to the server. It might be down.");
+			}
+		});
+
 		// Connection opened
 		socket.addEventListener('open', (event) => {
-			connectionInfo.wasEverConnected = true;
-			console.log("🔌 Connection formed!", event);
-			this.sendMessage("greetings", "Hello server!");
+			if (connectionInfo.isRetrying) {
+				connectionInfo.isRetrying = false;
+				console.log(`🔌✔ Connection re-formed after ${connectionInfo.retryCounter} tries!`);
+				connectionInfo.retryCounter = 0;
+			} else {
+				console.log("🔌 New connection formed!", event);
+			}
 		});
 
 		// Connection closed
 		socket.addEventListener('close', (event) => {
-			console.log("🔌 WS connection closed", event);
-			if (connectionInfo.wasEverConnected) {
-				alert("You have lost connection to the game server!");
-			} else {
-				alert("Could not connect to the server. It might be down.");
+			if (connectionInfo.isRetrying) {
+				// Retrying again is handled by `error` event
+				console.log("🔌 Retry attempt failed!", event);
+			} else if (connectionInfo.wasEverConnected) {
+				if (event.wasClean) {
+					console.log("🔌🛑 WS connection cleanly closed", event);
+				} else {
+					console.warn("🔌⚠ WS connection lost!", event);
+					this.attemptReconnect();
+				}
 			}
 		});
 
@@ -97,15 +126,24 @@ rhit.PageManager = class {
 
 			switch (message.Purpose) {
 			case "roomkey":
-				console.log("🔌 Received a message containing the Roomkey ", message.Data);
+				console.log("Received a message containing the Roomkey ", message.Data);
 				this.updateRoomKey(message.Data);
 
 				this.loadConnectedPlayers();
 				break;
 			case "question_info":
+				console.log("TODO question info setting");
 				break;
 			case "your_id":
-				connectionInfo.uuid = message.Data;
+				this.respondToYourID(message.data);
+				break;
+			case "reconnect_me_confirm":
+				console.log("Accepted reconnect");
+				connectionInfo.uuid = message.data;
+				break;
+			case "reconnect_me_deny":
+				console.log("Denied reconnect");
+				connectionInfo.uuid = message.data;
 				break;
 			default:
 				console.warn("🔌 Received message of unknown purpose:", message);
@@ -114,9 +152,37 @@ rhit.PageManager = class {
 		});
 	}
 
+	respondToYourID(data) {
+		if (connectionInfo.wasEverConnected) {
+			console.log("Attempting to re-establish old UUID");
+			this.sendMessage("reconnect_me", connectionInfo.uuid);
+		} else {
+			connectionInfo.uuid = data;
+			connectionInfo.wasEverConnected = true;
+			connectionInfo.isRetrying = false;
+			connectionInfo.retryCounter = 0;
+
+			// TODO actual request room keys and players list
+			this.sendMessage("roomkey_new", "");
+			this.sendMessage("question_details", "");
+		}
+	}
+
+	attemptReconnect() {
+		if (connectionInfo.retryCounter + 1 > MAX_RETRIES) {
+			alert("Failed to re-establish connection to game server");
+		} else {
+			connectionInfo.retryCounter++;
+			setTimeout(() => {
+				console.log(`🏓 Attempting to re-connect (try ${connectionInfo.retryCounter} of ${MAX_RETRIES})...`);
+				this.connectToWsServer();
+			}, RETRY_DELAY_MS);
+		}
+	}
+
 	sendMessage(purpose, data) {
 		if (socket) {
-			const messageStr = JSON.stringify({"Purpose": purpose, "Data": data});
+			const messageStr = JSON.stringify({"Purpose": purpose, "Data": data, "UUID": connectionInfo.uuid});
 			socket.send(messageStr);
 		} else {
 			console.error("Tried to send when the socket was not yet set up");
@@ -132,9 +198,9 @@ rhit.PageManager = class {
 		document.querySelector("#roomKey").innerHTML = `Room Key: ${key}`;
 	}
 
-	addPlayerToList(name) {
-		document.querySelector("#roomKey").innerHTML = `Room Key: ${key}`;
-	}
+	// addPlayerToList(name) {
+	// 	document.querySelector("#roomKey").innerHTML = `Room Key: ${key}`;
+	// }
 
 	_createPlayerItem(playerName) {
 		// TODO use cards for players maybe?
