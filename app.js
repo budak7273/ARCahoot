@@ -14,13 +14,11 @@ const {v4: uuidv4} = require('uuid');
 // Must stay 8000 for Heroku.
 // `process.env.PORT` seems to read from 5000 from the frontend folder's running firebase serve
 // Eventually fix that and figure out why
-const port = 8000;
-/*
 let port = process.env.PORT;
 if (port == null || port == "") {
 	port = 8000;
 }
-*/
+
 const ws_port = 3000;
 
 const questions = [
