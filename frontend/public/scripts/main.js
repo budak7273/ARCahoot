@@ -11,6 +11,7 @@ var rhit = rhit || {};
 var socket = socket || {};
 var connectionInfo = {
 	uuid: "UNSET",
+	name: "UNNAMED",
 	isRetrying: false,
 	wasEverConnected: false,
 	retryCounter: 0,
@@ -35,17 +36,27 @@ function htmlToElement(html) {
 	return template.content.firstChild;
 }
 
+// From https://stackoverflow.com/a/196991
+function toTitleCase(str) {
+	return str.replace(
+		/\w\S*/g,
+		function(txt) {
+			return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+		});
+}
+
 rhit.PageController = class {
 	constructor() {
 		document.querySelector("#startGameButton").onclick = (event) => {
 			console.log("Starting Game");
 			document.querySelector("#entryPage").style.display = "none";
-			document.querySelector("#questionsPage").style.display = "block";
+			rhit.PageManagerSingleton.showQuestionSection();
 		};
 
 		document.querySelectorAll(".answer-button").forEach((element) => {
 			element.onclick = (event) => {
 				console.log("Answer button clicked:", element.dataset.item);
+				rhit.PageManagerSingleton.answerButtonPressed(parseInt(element.dataset.item));
 			};
 		});
 	}
@@ -137,18 +148,20 @@ rhit.PageManager = class {
 				this.loadConnectedPlayers();
 				break;
 			case "question_info":
-				console.log("TODO question info setting");
+				this.updateQuestionDisplay(message.Data);
 				break;
 			case "your_id":
 				this.respondToYourID(message.Data);
 				break;
 			case "reconnect_me_confirm":
 				console.log("Accepted reconnect");
-				connectionInfo.uuid = message.Data;
+				connectionInfo.uuid = message.Data.uuid;
+				connectionInfo.name = message.Data.name;
 				break;
 			case "reconnect_me_deny":
 				console.log("Denied reconnect. Using new UUID %s instead.", message.Data);
-				connectionInfo.uuid = message.Data;
+				connectionInfo.uuid = message.Data.uuid;
+				connectionInfo.name = message.Data.name;
 				break;
 			default:
 				console.warn("🔌 Received message of unknown purpose:", message);
@@ -160,11 +173,13 @@ rhit.PageManager = class {
 	respondToYourID(data) {
 		if (connectionInfo.wasEverConnected) {
 			const oldUUID = connectionInfo.uuid;
-			connectionInfo.uuid = data;
+			connectionInfo.uuid = data.uuid;
 			console.log("Attempting to re-establish old UUID ", oldUUID);
 			this.sendMessage("reconnect_me", oldUUID);
 		} else {
-			connectionInfo.uuid = data;
+			connectionInfo.uuid = data.uuid;
+			connectionInfo.name = data.name;
+			this.updatePlayerName(connectionInfo.name);
 			connectionInfo.wasEverConnected = true;
 			connectionInfo.isRetrying = false;
 			connectionInfo.retryCounter = 0;
@@ -210,6 +225,31 @@ rhit.PageManager = class {
 
 	updateRoomKey(key) {
 		document.querySelector("#roomKey").innerHTML = `Room Key: ${key}`;
+	}
+
+	updatePlayerName(name) {
+		document.querySelector("#playerName").innerHTML = toTitleCase(name);
+	}
+
+	updateQuestionDisplay(data) {
+		document.querySelector("#questionText").innerHTML = data.question;
+		const array = data.answers;
+		for (let index = 0; index < array.length; index++) {
+			const answer = array[index];
+			document.querySelector(`#answerButton${index}`).innerHTML = answer;
+		}
+	}
+
+	showQuestionSection() {
+		document.querySelector("#questionsPage").style.display = "block";
+		document.querySelector("#answerButtonsContainer").style.display = "block";
+		document.querySelector("#answerAwaitContainer").style.display = "none";
+	}
+
+	answerButtonPressed(index) {
+		document.querySelector("#answerButtonsContainer").style.display = "none";
+		document.querySelector("#answerAwaitContainer").style.display = "block";
+		rhit.PageManagerSingleton.sendMessage("question_response", index);
 	}
 
 	// addPlayerToList(name) {

@@ -13,6 +13,7 @@
 <body>
 	<nav class="navbar navbar-dark fixed-top">
 		<a class="navbar-brand" href="/">ARCahoot</a>
+		<div class="navbar-brand">You're playing as <span id="playerName" class="stylized-text">Username</span></div>
 
 		<div class="d-sm-none">X-Small</div>
 		<div class="d-none d-sm-block d-md-none">Small</div>
@@ -22,7 +23,6 @@
 
 	</nav>
 	<div id="entryPage" class="container page-container">
-		
 		<div id="roomDetails" class="container">
 			<div class="row justify-content-center">
 				<h1 id="roomKey" class="center row">Room Key: Loading...</h1>
@@ -35,7 +35,6 @@
 		<div id="connectedPlayers" class="container">
 			<!-- Will be filled by JS at runtime	-->
 		</div>
-
 	</div>
 	<div id="questionsPage" class="container page-container" style="display:none">
 		<div class="row justify-content-center">
@@ -43,19 +42,44 @@
 				<h1 id="questionText">
 					What does a client use to connect to a server?
 				<h1>
+				<h4 id="timeLeft" class="stylized-text">Time left: ? seconds</h4>
 			</div>
-			<div class="col-6">
-				<button id="answerButton1" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="1">Unicorns and Rainbows</button>
+			<div id="answerButtonsContainer" class="container justify-content-center">
+				<div class="row">
+					<div class="col-6">
+						<button id="answerButton0" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="0">Unicorns and Rainbows</button>
+					</div>
+					<div class="col-6">
+						<button id="answerButton1" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="1">The SGA Budget</button>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-6">
+						<button id="answerButton2" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="2">Final Exams</button>
+					</div>
+					<div class="col-6">
+						<button id="answerButton3" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="3">Sockets</button>
+					</div>
+				</div>
 			</div>
-			<div class="col-6">
-				<button id="answerButton2" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="2">The SGA Budget</button>
+			<div id="answerAwaitContainer" class="container" style="display:none">
+				<div class="row">
+					<div class="col">
+						<h4 class="stylized-text" style="text-align: center;">You've submitted your answer...</h4>
+					</div>
+				</div>
 			</div>
-			<div class="col-6">
-				<button id="answerButton3" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="3">Final Exams</button>
+		</div>
+	</div>
+	<div id="answerPage" class="container page-container" style="display:none">
+		<div class="row justify-content-center">
+			<div class="questionBox">
+				<h4 id="correctAnswerHeader" class="stylized-text">The correct answer was:</h4>
+				<h1 id="correctAnswer">
+					The SGA Budget
+				<h1>
 			</div>
-			<div class="col-6">
-				<button id="answerButton4" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="4">Sockets</button>
-			</div>
+		</div>
 	</div>
 	<script src="scripts/jquery.min.js"></script>
 	<script src="scripts/popper.js"></script>

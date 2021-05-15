@@ -39,3 +39,33 @@ body {
     margin-bottom: 20px;
     padding: 30px;
 }
+
+#answerButtonsContainer .row {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.answer-button.btn {
+    height: 7rem;
+    white-space: normal;
+    color: #e2e2e2;
+    font-size: larger;
+}
+
+#answerButton0 {
+    background-color: #af2222;
+}
+#answerButton1 {
+    /* background-color: #225aaf; */
+    background-color: #3786fc;
+}
+#answerButton2 {
+    background-color: #ccba13;
+}
+#answerButton3 {
+    background-color: #30ac36;
+}
+
+.stylized-text {
+    font-style: italic;
+}
