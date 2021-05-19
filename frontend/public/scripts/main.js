@@ -219,7 +219,8 @@ rhit.PageManager = class {
 		if (isLocalhost) {
 			return "ws://localhost:8000";
 		} else {
-			return location.origin.replace(/^http/, 'ws');
+			// return location.origin.replace(/^http/, 'ws'); // Would only work if on the same hostname (it's not)
+			return "ws://arcahoot.herokuapp.com/";
 		}
 	}
 
@@ -270,7 +271,6 @@ rhit.PageManager = class {
 };
 
 /* Main */
-/** function and class syntax examples */
 rhit.main = function () {
 	new rhit.PageController();
 	rhit.PageManagerSingleton = new rhit.PageManager();
