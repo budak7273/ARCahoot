@@ -30,4 +30,4 @@ Possible messages from client:
 - `question_details`: answers string array, question text string : Send current question details
 - `reconnect_me`: Client's previous UUID : Server should delete UUID of message that came along and treat client as previous UUID instead
 - `question_response`: index of answer : Client submitting an answer for the question
-- TODO `start_game` : Roomkey string : Signal that the server should begin the game
+- `server_start_game` : Roomkey string : Signal that the server should begin the game

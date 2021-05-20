@@ -15,11 +15,11 @@
 		<a class="navbar-brand" href="/">ARCahoot</a>
 		<div class="navbar-brand">You're playing as <span id="playerName" class="stylized-text">Username</span></div>
 
-		<div class="d-sm-none">X-Small</div>
+		<!-- <div class="d-sm-none">X-Small</div>
 		<div class="d-none d-sm-block d-md-none">Small</div>
 		<div class="d-none d-md-block d-lg-none">Medium</div>
 		<div class="d-none d-lg-block d-xl-none">Large</div>
-		<div class="d-none d-xl-block">X-Large</div>
+		<div class="d-none d-xl-block">X-Large</div> -->
 
 	</nav>
 	<div id="entryPage" class="container page-container">
@@ -28,7 +28,10 @@
 				<h1 id="roomKey" class="center row">Room Key: Loading...</h1>
 			</div>
 			<div class="row justify-content-center">
-				<button id="startGameButton" type="button" class="row btn btn-block btn-outline-primary">Start Game!</button>
+				<button id="startGameButton" type="button" class="row btn btn-block btn-outline-primary" style="display:none">Start Game!</button>
+			</div>
+			<div class="row justify-content-center">
+				<h4 id="startGameWaitingOnHost" class="row" style="display:none">Waiting on host to start...</h4>
 			</div>
 		</div>
 		<h1 class="center">Currently Playing</h1>
@@ -40,25 +43,26 @@
 		<div class="row justify-content-center">
 			<div class="questionBox">
 				<h1 id="questionText">
-					What does a client use to connect to a server?
+					Loading...
 				<h1>
-				<h4 id="timeLeft" class="stylized-text">Time left: ? seconds</h4>
+				<h4 id="timeLeft" class="stylized-text">Time left: Unlimited seconds</h4>
 			</div>
+			<button id="toScoresScreenButton" type="button" class="row btn btn-block btn-outline-primary" style="display:none">Go to scores...</button>
 			<div id="answerButtonsContainer" class="container justify-content-center">
 				<div class="row">
 					<div class="col-6">
-						<button id="answerButton0" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="0">Unicorns and Rainbows</button>
+						<button id="answerButton0" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="0">Loading...</button>
 					</div>
 					<div class="col-6">
-						<button id="answerButton1" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="1">The SGA Budget</button>
+						<button id="answerButton1" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="1">Loading...</button>
 					</div>
 				</div>
 				<div class="row">
 					<div class="col-6">
-						<button id="answerButton2" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="2">Final Exams</button>
+						<button id="answerButton2" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="2">Loading...</button>
 					</div>
 					<div class="col-6">
-						<button id="answerButton3" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="3">Sockets</button>
+						<button id="answerButton3" type="button" class="answer-button btn btn-block btn-outline-primary" data-item="3">Loading...</button>
 					</div>
 				</div>
 			</div>
@@ -71,16 +75,24 @@
 			</div>
 		</div>
 	</div>
-	<div id="answerPage" class="container page-container" style="display:none">
+	<div id="scorePage" class="container page-container" style="display:none">
 		<div class="row justify-content-center">
 			<div class="questionBox">
 				<h4 id="correctAnswerHeader" class="stylized-text">The correct answer was:</h4>
 				<h1 id="correctAnswer">
-					The SGA Budget
+					Loading...
 				<h1>
+				<h4 id="wereYouCorrectHeader" class="stylized-text">Loading...</h4>
 			</div>
+			<button id="toNextQuestionButton" type="button" class="row btn btn-block btn-outline-primary" style="display:none">Next question...</button>
+			<h2 id="finalRoundHeader" class="stylized-text" style="display:none">Thanks for playing!</h2>
+			<ol id="scoreList">
+				<li>Loading...</li>
+			</ol>
 		</div>
 	</div>
+
+
 	<script src="scripts/jquery.min.js"></script>
 	<script src="scripts/popper.js"></script>
 	<script src="scripts/bootstrap-material-design.js"></script>

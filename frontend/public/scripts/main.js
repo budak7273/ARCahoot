@@ -12,6 +12,7 @@ var socket = socket || {};
 var connectionInfo = {
 	uuid: "UNSET",
 	name: "UNNAMED",
+	roomKey: "UNSET",
 	isRetrying: false,
 	wasEverConnected: false,
 	retryCounter: 0,
@@ -47,11 +48,29 @@ function toTitleCase(str) {
 
 rhit.PageController = class {
 	constructor() {
+		const urlParams = new URLSearchParams(window.location.search);
 		document.querySelector("#startGameButton").onclick = (event) => {
 			console.log("Starting Game");
-			document.querySelector("#entryPage").style.display = "none";
-			rhit.PageManagerSingleton.showQuestionSection();
+
+			if (urlParams.get('perm') == "button") {
+				document.querySelector("#toScoresScreenButton").style.display = 'block';
+				document.querySelector("#toNextQuestionButton").style.display = 'block';
+			}
+			rhit.PageManagerSingleton.startGame();
 		};
+
+		document.querySelector("#toScoresScreenButton").onclick = (event) => {
+			rhit.PageManagerSingleton.toScoresScreen();
+		};
+		document.querySelector("#toNextQuestionButton").onclick = (event) => {
+			rhit.PageManagerSingleton.advanceGame();
+		};
+
+		if (urlParams.get('perm') == "button") {
+			document.querySelector("#startGameButton").style.display = 'block';
+		} else {
+			document.querySelector("#startGameWaitingOnHost").style.display = 'block';
+		}
 
 		document.querySelectorAll(".answer-button").forEach((element) => {
 			element.onclick = (event) => {
@@ -78,10 +97,16 @@ rhit.PageManager = class {
 
 	loadConnectedPlayers(playerData) {
 		const playerList = document.querySelector("#connectedPlayers");
-		for (let index = 0; index < 10; index++) {
-			const playerCard = this._createPlayerItem(`Player ${index}`);
+		// for (let index = 0; index < 10; index++) {
+			// const playerCard = this._createPlayerItem(`Player ${index}`);
+		// 	playerList.appendChild(playerCard);
+		// }
+		console.log(playerData);
+		playerList.innerHTML = "";
+		playerData.forEach((element) => {
+			const playerCard = this._createPlayerItem(toTitleCase(`${element}`));
 			playerList.appendChild(playerCard);
-		}
+		});
 	}
 
 	connectToWsServer() {
@@ -143,9 +168,8 @@ rhit.PageManager = class {
 			switch (message.Purpose) {
 			case "roomkey":
 				console.log("Received a message containing the Roomkey ", message.Data);
+				connectionInfo.roomKey = message.Data;
 				this.updateRoomKey(message.Data);
-
-				this.loadConnectedPlayers();
 				break;
 			case "question_info":
 				this.updateQuestionDisplay(message.Data);
@@ -157,17 +181,43 @@ rhit.PageManager = class {
 				console.log("Accepted reconnect");
 				connectionInfo.uuid = message.Data.uuid;
 				connectionInfo.name = message.Data.name;
+				this.updatePlayerName(connectionInfo.name);
 				break;
 			case "reconnect_me_deny":
 				console.log("Denied reconnect. Using new UUID %s instead.", message.Data);
 				connectionInfo.uuid = message.Data.uuid;
 				connectionInfo.name = message.Data.name;
+				this.updatePlayerName(connectionInfo.name);
+				break;
+			case "start_game":
+				console.log("🎉 Game has been started!");
+				this.startGame();
+				break;
+			case "players_list":
+				console.log("Updating player list");
+				this.loadConnectedPlayers(message.Data.players);
+				break;
+			case "scores_screen_data":
+				console.log("Updating scores on the client's side");
+				this.updatePlayerScores(message.Data);
 				break;
 			default:
 				console.warn("🔌 Received message of unknown purpose:", message);
 				break;
 			}
 		});
+	}
+
+	startGame() {
+		this.sendMessage("server_start_game", connectionInfo.roomKey);
+	}
+
+	advanceGame() {
+		this.sendMessage("request_question_for_all", connectionInfo.roomKey);
+	}
+
+	toScoresScreen() {
+		this.sendMessage("go_to_scores_screen_for_all", {});
 	}
 
 	respondToYourID(data) {
@@ -184,9 +234,7 @@ rhit.PageManager = class {
 			connectionInfo.isRetrying = false;
 			connectionInfo.retryCounter = 0;
 
-			// TODO actual request room keys and players list
 			this.sendMessage("roomkey_new", "");
-			this.sendMessage("question_details", "");
 		}
 	}
 
@@ -220,7 +268,7 @@ rhit.PageManager = class {
 			return "ws://localhost:8000";
 		} else {
 			// return location.origin.replace(/^http/, 'ws'); // Would only work if on the same hostname (it's not)
-			return "ws://arcahoot.herokuapp.com/";
+			return "wss://arcahoot.herokuapp.com/";
 		}
 	}
 
@@ -233,6 +281,8 @@ rhit.PageManager = class {
 	}
 
 	updateQuestionDisplay(data) {
+		document.querySelector("#entryPage").style.display = 'none';
+		rhit.PageManagerSingleton.showQuestionSection();
 		document.querySelector("#questionText").innerHTML = data.question;
 		const array = data.answers;
 		for (let index = 0; index < array.length; index++) {
@@ -241,32 +291,78 @@ rhit.PageManager = class {
 		}
 	}
 
-	showQuestionSection() {
-		document.querySelector("#questionsPage").style.display = "block";
-		document.querySelector("#answerButtonsContainer").style.display = "block";
-		document.querySelector("#answerAwaitContainer").style.display = "none";
-	}
-
 	answerButtonPressed(index) {
 		document.querySelector("#answerButtonsContainer").style.display = "none";
 		document.querySelector("#answerAwaitContainer").style.display = "block";
 		rhit.PageManagerSingleton.sendMessage("question_response", index);
 	}
 
-	// addPlayerToList(name) {
-	// 	document.querySelector("#roomKey").innerHTML = `Room Key: ${key}`;
-	// }
+	showQuestionSection() {
+		document.querySelector("#scorePage").style.display = "none";
+		document.querySelector("#entryPage").style.display = "none";
+
+		document.querySelector("#questionsPage").style.display = "block";
+
+		document.querySelector("#answerButtonsContainer").style.display = "block";
+		document.querySelector("#answerAwaitContainer").style.display = "none";
+	}
+
+	showScoresSection() {
+		document.querySelector("#questionsPage").style.display = "none";
+		document.querySelector("#entryPage").style.display = "none";
+		document.querySelector("#finalRoundHeader").style.display = 'none';
+
+		document.querySelector("#scorePage").style.display = "block";
+	}
+
+	showEntrySection() {
+		document.querySelector("#questionsPage").style.display = "none";
+		document.querySelector("#scorePage").style.display = "none";
+
+		document.querySelector("#entryPage").style.display = "block";
+	}
+
+	updatePlayerScores(data) {
+		this.showScoresSection();
+		console.log("Scores info:", data);
+		const rankings = document.querySelector("#scoreList");
+		const wereYouCorrect = document.querySelector("#wereYouCorrectHeader");
+		const correctAnswerElement = document.querySelector("#correctAnswer");
+		rankings.innerHTML = "";
+		correctAnswerElement.innerHTML = data.correctAnswer;
+		let myRanking = {};
+		data.scoreData.sort((a, b) => b.score-a.score);
+		data.scoreData.forEach((e) => {
+			let isMe = false;
+			if (e.name === connectionInfo.name) {
+				myRanking = e;
+				isMe = true;
+			}
+			rankings.appendChild(this._createPlayerScoreItem(toTitleCase(e.name), e.score, isMe));
+		});
+		console.log("My ranking is", myRanking);
+		wereYouCorrect.innerHTML =
+			(myRanking.didYouAnswer) ?
+				((myRanking.wereYouCorrect) ? "You were correct!" : "You were not correct.") :
+				"You didn't answer...";
+
+		if (data.isFinalScores) {
+			console.log("Is final round");
+			// document.querySelector("#toNextQuestionButton").style.display = 'none';
+			document.querySelector("#finalRoundHeader").style.display = 'block';
+		}
+	}
 
 	_createPlayerItem(playerName) {
-		// TODO use cards for players maybe?
-		// return htmlToElement(
-		// 	`<div class="card">
-		// 		<div class="card-body">
-		// 			<h5 class="card-title">${player}</h5>
-		// 		</div>
-		// 	</div>`);
 		return htmlToElement(
 			`<div class="player-item"><p>${playerName}</p></div>`);
+	}
+
+	_createPlayerScoreItem(playerName, score, isMe) {
+		return htmlToElement(
+			`<li class="${isMe ? 'my-score' : 'other-player-score'}"><span>${playerName}</span>          <span>${score}</span></li>`);
+		// return htmlToElement(
+		// 	`<div class="player-item"><p>${playerName}</p><p>${score}</p></div>`);
 	}
 };
 

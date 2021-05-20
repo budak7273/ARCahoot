@@ -69,3 +69,7 @@ body {
 .stylized-text {
     font-style: italic;
 }
+
+.my-score {
+    font-weight: bold;
+}
