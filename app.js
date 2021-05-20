@@ -342,7 +342,6 @@ const addNewClient = (ws) => {
 const releaseClient = (uuid, ws) => {
 	// Further closing logic?
 	const clientIndex = rooms.DEFAULT_ROOM.players.indexOf(uuid_to_user[uuid]);
-	console.log("clientIndex", clientIndex);
 	delete ws_to_uuids[ws];
 	delete uuid_to_user[uuid];
 	rooms.DEFAULT_ROOM.players.splice(clientIndex, 1);
