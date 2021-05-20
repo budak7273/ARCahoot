@@ -262,7 +262,8 @@ rhit.PageManager = class {
 
 	attemptReconnect() {
 		const thisAttemptNum = connectionInfo.retryCounter + 1;
-		if (thisAttemptNum > MAX_RETRIES) {
+		const exceededMaxRetries = thisAttemptNum > MAX_RETRIES;
+		if (exceededMaxRetries) {
 			alert(`Failed to re-establish connection to game server after ${MAX_RETRIES} tries`);
 			clearInterval(connectionInfo.heartbeatHandler); // TODO this doesn't seem to always clear it?
 		} else {
@@ -273,7 +274,7 @@ rhit.PageManager = class {
 				this.connectToWsServer();
 			}, RETRY_DELAY_MS);
 		}
-		this.showReconnectPane(thisAttemptNum, false);
+		this.showReconnectPane(thisAttemptNum, exceededMaxRetries);
 	}
 
 	sendMessage(purpose, data) {
