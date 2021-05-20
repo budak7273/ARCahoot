@@ -128,7 +128,8 @@ rhit.PageManager = class {
 				this.attemptReconnect();
 			} else {
 				// Never established first connection, so don't retry
-				alert("Could not connect to the server. It might be down.");
+				alert("Could not connect to the server. It might be down.\n\n" +
+					"Try coming back to the page in a few seconds - it takes a bit for the server to return from sleep.");
 			}
 		});
 

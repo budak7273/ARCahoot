@@ -149,7 +149,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/port", (req, res) => {
-	res.json({port: ws_port});
+	res.json({webSocketServerPort: ws_port});
 });
 
 // Debugging endpoints to view server info
@@ -271,6 +271,9 @@ wss.on('connection', (ws, req) => {
 						name: correspondingUser.name,
 						color: correspondingUser.color,
 					});
+					sendJsonToAllUsers("players_list", {
+						players: rooms.DEFAULT_ROOM.getAllPlayerNames(),
+					});
 				} else {
 					const replacementUser = uuid_to_user[uuidOfReplacement];
 					console.log("Refused client reconnect (uuid not on record)");
@@ -316,9 +319,10 @@ wss.on('connection', (ws, req) => {
 		// console.log("===================THIS is ", this);
 		const uuid = ws_to_uuids[this];
 		const associatedPlayer = uuid_to_user[uuid];
-		console.log("Player ", associatedPlayer.name);
+		const associatedPlayerName = (associatedPlayer) ? associatedPlayer.name : "NULL_PLAYER";
+		console.log("Player %s lost connection?", associatedPlayerName);
 		// const uuid = "<TODO better close message>";
-		console.log("❌ Connection to TODO FIX'%s' closed with status %s", associatedPlayer.name, params);
+		console.log("❌ Connection to TODO FIX'%s' closed with status %s", associatedPlayerName, params);
 		// releaseClient(uuid, this);
 	});
 });
