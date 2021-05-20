@@ -13,6 +13,7 @@ var connectionInfo = {
 	uuid: "UNSET",
 	name: "UNNAMED",
 	roomKey: "UNSET",
+	colorHex: "#af2222",
 	isRetrying: false,
 	wasEverConnected: false,
 	retryCounter: 0,
@@ -97,16 +98,20 @@ rhit.PageManager = class {
 
 	loadConnectedPlayers(playerData) {
 		const playerList = document.querySelector("#connectedPlayers");
-		// for (let index = 0; index < 10; index++) {
-			// const playerCard = this._createPlayerItem(`Player ${index}`);
-		// 	playerList.appendChild(playerCard);
-		// }
 		console.log(playerData);
 		playerList.innerHTML = "";
-		playerData.forEach((element) => {
-			const playerCard = this._createPlayerItem(toTitleCase(`${element}`));
+		playerData.forEach((data) => {
+			const playerCard = this._createPlayerItem(toTitleCase(`${data.name}`));
+			playerCard.style.color = data.color;
 			playerList.appendChild(playerCard);
 		});
+	}
+
+	updateConnectionInfo(uuid, name, colorHex) {
+		connectionInfo.uuid = uuid;
+		connectionInfo.name = name;
+		connectionInfo.colorHex = colorHex;
+		this.updatePlayerName(connectionInfo.name);
 	}
 
 	connectToWsServer() {
@@ -179,15 +184,11 @@ rhit.PageManager = class {
 				break;
 			case "reconnect_me_confirm":
 				console.log("Accepted reconnect");
-				connectionInfo.uuid = message.Data.uuid;
-				connectionInfo.name = message.Data.name;
-				this.updatePlayerName(connectionInfo.name);
+				this.updateConnectionInfo(message.Data.uuid, message.Data.name, message.Data.color);
 				break;
 			case "reconnect_me_deny":
 				console.log("Denied reconnect. Using new UUID %s instead.", message.Data);
-				connectionInfo.uuid = message.Data.uuid;
-				connectionInfo.name = message.Data.name;
-				this.updatePlayerName(connectionInfo.name);
+				this.updateConnectionInfo(message.Data.uuid, message.Data.name, message.Data.color);
 				break;
 			case "start_game":
 				console.log("🎉 Game has been started!");
@@ -227,9 +228,7 @@ rhit.PageManager = class {
 			console.log("Attempting to re-establish old UUID ", oldUUID);
 			this.sendMessage("reconnect_me", oldUUID);
 		} else {
-			connectionInfo.uuid = data.uuid;
-			connectionInfo.name = data.name;
-			this.updatePlayerName(connectionInfo.name);
+			this.updateConnectionInfo(data.uuid, data.name, data.color);
 			connectionInfo.wasEverConnected = true;
 			connectionInfo.isRetrying = false;
 			connectionInfo.retryCounter = 0;
@@ -278,6 +277,8 @@ rhit.PageManager = class {
 
 	updatePlayerName(name) {
 		document.querySelector("#playerName").innerHTML = toTitleCase(name);
+		document.querySelector("#playerName").style.color = connectionInfo.colorHex;
+		document.querySelector("#entireNavbar").style.backgroundColor = connectionInfo.colorHex;
 	}
 
 	updateQuestionDisplay(data) {
@@ -338,7 +339,9 @@ rhit.PageManager = class {
 				myRanking = e;
 				isMe = true;
 			}
-			rankings.appendChild(this._createPlayerScoreItem(toTitleCase(e.name), e.score, isMe));
+			const element = this._createPlayerScoreItem(toTitleCase(e.name), e.score, isMe);
+			element.style.color = e.color;
+			rankings.appendChild(element);
 		});
 		console.log("My ranking is", myRanking);
 		wereYouCorrect.innerHTML =

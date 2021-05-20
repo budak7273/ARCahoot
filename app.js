@@ -1,12 +1,10 @@
 const express = require('express');
 const {v4: uuidv4} = require('uuid');
 const generateName = require('project-name-generator');
-const randomColor = require('randomcolor');
+const randomColorGoldenRatio = require('random-color');
 const WebSocket = require('ws');
 
 // This server exists to manage the actual game. It does not (currently) provide any of the website files.
-// We will need to do stuff with websockets (probably?) to maintain a connection with each client.
-// Possibly helpful: https://medium.com/hackernoon/implementing-a-websocket-server-with-node-js-d9b78ec5ffa8
 
 // Special info about WebSockets on Heroku:
 // https://devcenter.heroku.com/articles/websockets
@@ -17,28 +15,38 @@ let ws_port = process.env.PORT;
 if (ws_port == null || ws_port == "") {
 	ws_port = 8000;
 }
-console.log("Port detected", ws_port);
+console.log("Set to port:", ws_port);
 
 const questionData = [
 	{
-		question: "What port is your client's websocket on?",
+		question: "Which of the following is an actual networking protocol we covered in class?",
+		answers: ["ZDP", "UTP", "TTP", "UDP"],
+		correctAnswerIndex: 3,
+	},
+	{
+		question: "Does this class have a final?",
+		answers: ["Nope!", "What? There's a final?!?", "Of course there is.", "Every class should have a final project and exam."],
+		correctAnswerIndex: 0,
+	},
+	{
+		question: "What port is your client's websocket connected to the server with?",
 		answers: ["5000", "8000", "1000", "Who knows?"],
 		correctAnswerIndex: 3,
 	},
 	{
-		question: "Which of the following is an actual method of connecting a client to a server?",
-		answers: ["TCP", "Messager Pigeon", "Mail Service", "Webpage"],
-		correctAnswerIndex: 3,
-	},
-	{
-		question: "What is x: 2x+1=5",
+		question: "Solve for x:  2x + 1 = 5",
 		answers: ["0", "1", "2", "5"],
-		correctAnswerIndex: 3,
+		correctAnswerIndex: 2,
 	},
 	{
 		question: "What does a client use to connect to a server?",
-		answers: ["Unicorns and Rainbows", "The SGA Budget", "Final Exams", "Sockets"],
+		answers: ["🦄Unicorns and 🌈Rainbows", "The SGA Budget", "Final Exams", "Sockets"],
 		correctAnswerIndex: 3,
+	},
+	{
+		question: "What does the back of Aaron Wilkin's \"I get to teach\" shirt say?",
+		answers: ["I get to grade", "I'm paid to grade", "I'm paid to teach", "I love to grade"],
+		correctAnswerIndex: 1,
 	},
 ];
 
@@ -51,7 +59,7 @@ Room = class {
 	}
 
 	getQuestion() {
-		return questionData[this.question_index];// || questionData[0]; // TODO make better default
+		return questionData[this.question_index];
 	}
 
 	getCorrectAnswer() {
@@ -67,17 +75,20 @@ Room = class {
 	getAllPlayerNames() {
 		const playerNames = [];
 		this.players.forEach((userObj) => {
-			playerNames.push(userObj.name);
+			playerNames.push({
+				name: userObj.name,
+				color: userObj.color,
+			});
 		});
 		return playerNames;
 	}
 
 	getPlayerScores() {
-		console.log("GetScores");
 		const playerScores = [];
 		this.players.forEach((userObj) => {
 			playerScores.push({
 				name: userObj.name,
+				color: userObj.color,
 				score: userObj.score,
 				wereYouCorrect: userObj.lastWasCorrect,
 				didYouAnswer: this.whoAnswered.indexOf(userObj) != -1,
@@ -91,7 +102,7 @@ Room = class {
 	}
 
 	nextRound() {
-		wipeRoundData();
+		this.wipeRoundData();
 		this.question_index++;
 		console.log("Is now index", this.question_index);
 	}
@@ -103,18 +114,20 @@ Room = class {
 	restart() {
 		this.question_index = 0;
 		this.wipeRoundData();
+		this.players.forEach((userObj) => {
+			userObj.score = 0;
+			userObj.lastWasCorrect = false;
+		});
 	}
 };
 
 User = class {
-	constructor(uuid, socket, name) {
-		this.uuid = uuid;
+	constructor(socket) {
+		this.uuid = uuidv4();
 		this.socket = socket;
-		this.name = name;
+		this.name = generateName({words: 2, alliterative: true}).spaced;
 		this.score = 0;
-		this.color = randomColor({
-			luminosity: 'dark',
-		});
+		this.color = randomColorGoldenRatio(0.8, 0.75).hexString();
 		this.lastWasCorrect = false;
 	}
 };
@@ -172,12 +185,11 @@ const wss = new WebSocket.Server({server: server});
 wss.on('connection', (ws, req) => {
 	console.log("Connection established with", ws._socket.remoteAddress);
 
-	const newClientUUID = uuidv4();
-	const newClientName = generateName({words: 2, alliterative: true}).spaced;
-	const newClient = addNewClient(newClientUUID, newClientName, ws);
+	const newClient = addNewClient(ws);
 	sendJson(ws, "your_id", {
-		uuid: newClientUUID,
-		name: newClientName,
+		uuid: newClient.uuid,
+		name: newClient.name,
+		color: newClient.color,
 	});
 
 	// Send updated players list to all players
@@ -235,30 +247,37 @@ wss.on('connection', (ws, req) => {
 				}
 
 				const scoreData = senderRoom.getPlayerScores();
+				console.log("Got scores");
 				sendJsonToAllUsers("scores_screen_data", {
 					isFinalScores: isFinalScores,
 					correctAnswer: senderRoom.getCorrectAnswer(),
 					scoreData: scoreData,
 				});
+				console.log("Next round fired");
 				senderRoom.nextRound();
 				break;
 			case "reconnect_me":
-				const clientUUIDToInvalidate = message.UUID;
-				const clientUUIDToRestore = message.Data;
-				console.log("Client %s is trying to restore to old UUID %s", clientUUIDToInvalidate, clientUUIDToRestore);
-				if (uuid_to_user[clientUUIDToRestore]) {
-					releaseClient(clientUUIDToInvalidate);
+				const uuidOfReplacement = message.UUID;
+				const uuidOfOldUser = message.Data;
+				console.log("Client %s is trying to restore to old UUID %s", uuidOfReplacement, uuidOfOldUser);
+				const correspondingUser = uuid_to_user[uuidOfOldUser];
+				if (correspondingUser) {
+					releaseClient(uuidOfReplacement);
 					console.log("Allowed client to reconnect");
-					uuid_to_user[clientUUIDToRestore].socket = ws;
+
+					correspondingUser.socket = ws;
 					sendJson(ws, "reconnect_me_confirm", {
-						uuid: clientUUIDToRestore,
-						name: uuid_to_user[clientUUIDToRestore].name,
+						uuid: uuidOfOldUser,
+						name: correspondingUser.name,
+						color: correspondingUser.color,
 					});
 				} else {
+					const replacementUser = uuid_to_user[uuidOfReplacement];
 					console.log("Refused client reconnect (uuid not on record)");
 					sendJson(ws, "reconnect_me_deny", {
-						uuid: clientUUIDToInvalidate,
-						name: uuid_to_user[clientUUIDToInvalidate].name,
+						uuid: uuidOfReplacement,
+						name: replacementUser.name,
+						color: replacementUser.color,
 					});
 				}
 				break;
@@ -304,12 +323,15 @@ wss.on('connection', (ws, req) => {
 	});
 });
 
-const addNewClient = (uuid, name, ws) => {
-	const freshUser = new User(uuid, ws, name);
+const addNewClient = (ws) => {
+	const freshUser = new User(ws);
+	const uuid = freshUser.uuid;
+
 	ws_to_uuids[ws] = uuid;
 	uuid_to_user[uuid] = freshUser;
 	user_to_room[freshUser] = rooms.DEFAULT_ROOM;
 	rooms.DEFAULT_ROOM.players.push(freshUser);
+
 	return freshUser;
 };
 
@@ -319,9 +341,7 @@ const releaseClient = (uuid, ws) => {
 	console.log("clientIndex", clientIndex);
 	delete ws_to_uuids[ws];
 	delete uuid_to_user[uuid];
-	// console.log("Players before", rooms.DEFAULT_ROOM.players);
 	rooms.DEFAULT_ROOM.players.splice(clientIndex, 1);
-	// console.log("Players after", rooms.DEFAULT_ROOM.players);
 };
 
 const sendJson = (ws, purpose, data) => {

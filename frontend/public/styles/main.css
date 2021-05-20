@@ -73,3 +73,10 @@ body {
 .my-score {
     font-weight: bold;
 }
+
+.player-box {
+    background: #DDDDDD;
+    padding-left: 7px;
+    padding-right: 14px;
+    border-radius: 5px;
+}

@@ -11,9 +11,9 @@
 </head>
 
 <body>
-	<nav class="navbar navbar-dark fixed-top">
+	<nav id="entireNavbar" class="navbar navbar-dark fixed-top">
 		<a class="navbar-brand" href="/">ARCahoot</a>
-		<div class="navbar-brand">You're playing as <span id="playerName" class="stylized-text">Username</span></div>
+		<div class="navbar-brand player-box" style="color: black">You're playing as <span id="playerName" class="stylized-text">Username</span></div>
 
 		<!-- <div class="d-sm-none">X-Small</div>
 		<div class="d-none d-sm-block d-md-none">Small</div>
@@ -83,9 +83,9 @@
 					Loading...
 				<h1>
 				<h4 id="wereYouCorrectHeader" class="stylized-text">Loading...</h4>
+				<h2 id="finalRoundHeader" class="stylized-text" style="display:none">Thanks for playing!</h2>
 			</div>
 			<button id="toNextQuestionButton" type="button" class="row btn btn-block btn-outline-primary" style="display:none">Next question...</button>
-			<h2 id="finalRoundHeader" class="stylized-text" style="display:none">Thanks for playing!</h2>
 			<ol id="scoreList">
 				<li>Loading...</li>
 			</ol>
