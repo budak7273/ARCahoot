@@ -17,6 +17,9 @@ if (ws_port == null || ws_port == "") {
 }
 console.log("Set to port:", ws_port);
 
+const KILL_INACTIVE_USERS_INTERVAL_MS = 5000;
+const INACTIVE_USER_MAX_LAST_PING_DIFFERENCE_MS = 20000;
+
 const questionData = [
 	{
 		question: "Which of the following is an actual networking protocol we covered in class?",
@@ -119,6 +122,25 @@ Room = class {
 			userObj.lastWasCorrect = false;
 		});
 	}
+
+	killInactiveUsers() {
+		const now = Date.now();
+		const killed = [];
+		this.players.forEach((userObj) => {
+			const userLastHeartbeat = userObj.lastHeartbeat;
+			if (now - userLastHeartbeat > INACTIVE_USER_MAX_LAST_PING_DIFFERENCE_MS) {
+				killed.push(userObj);
+			}
+		});
+		// needs to happen in new loop so this.players isn't modified during run
+		killed.forEach((userObj) => {
+			releaseClient(userObj.uuid, userObj.socket);
+		});
+		if (killed.length > 0) {
+			console.log("Killed %s users in room %s", killed.length, this.room_key);
+			sendPlayersListToAll();
+		}
+	}
 };
 
 User = class {
@@ -197,10 +219,7 @@ wss.on('connection', (ws, req) => {
 		color: newClient.color,
 	});
 
-	// Send updated players list to all players
-	sendJsonToAllUsers("players_list", {
-		players: rooms.DEFAULT_ROOM.getAllPlayerNames(),
-	});
+	sendPlayersListToAll();
 
 	ws.on('message', function incoming(messageRaw) {
 		let message;
@@ -278,7 +297,7 @@ wss.on('connection', (ws, req) => {
 				console.log("Client %s is trying to restore to old UUID %s", uuidOfReplacement, uuidOfOldUser);
 				const correspondingUser = uuid_to_user[uuidOfOldUser];
 				if (correspondingUser) {
-					releaseClient(uuidOfReplacement);
+					releaseClient(correspondingUser.uuid, correspondingUser.socket);
 					console.log("Allowed client to reconnect");
 
 					correspondingUser.socket = ws;
@@ -287,9 +306,7 @@ wss.on('connection', (ws, req) => {
 						name: correspondingUser.name,
 						color: correspondingUser.color,
 					});
-					sendJsonToAllUsers("players_list", {
-						players: rooms.DEFAULT_ROOM.getAllPlayerNames(),
-					});
+					sendPlayersListToAll();
 				} else {
 					const replacementUser = uuid_to_user[uuidOfReplacement];
 					console.log("Refused client reconnect (uuid not on record)");
@@ -368,7 +385,13 @@ const sendJson = (ws, purpose, data) => {
 	ws.send(messageStr);
 };
 
-const sendJsonToAllUsers= (purpose, data) => {
+const sendPlayersListToAll = () => {
+	sendJsonToAllUsers("players_list", {
+		players: rooms.DEFAULT_ROOM.getAllPlayerNames(),
+	});
+};
+
+const sendJsonToAllUsers = (purpose, data) => {
 	for (const key in uuid_to_user) {
 		if (Object.hasOwnProperty.call(uuid_to_user, key)) {
 			const item = uuid_to_user[key];
@@ -397,3 +420,4 @@ const makeRoomKey = () => {
 
 
 rooms.DEFAULT_ROOM.room_key = makeRoomKey();
+setInterval(rooms.DEFAULT_ROOM.killInactiveUsers.bind(rooms.DEFAULT_ROOM), KILL_INACTIVE_USERS_INTERVAL_MS);

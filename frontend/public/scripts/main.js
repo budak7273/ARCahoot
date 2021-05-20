@@ -26,7 +26,7 @@ var connectionInfo = {
 /** globals */
 rhit.PageManagerSingleton = "";
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 1000;
 const HEARTBEAT_INTERVAL_MS = 10000;
 
@@ -141,6 +141,7 @@ rhit.PageManager = class {
 				this.attemptReconnect();
 			} else {
 				// Never established first connection, so don't retry
+				this.showReconnectPane(0, true);
 				alert("Could not connect to the server. It might be down.\n\n" +
 					"Try coming back to the page in a few seconds - it takes a bit for the server to return from sleep.");
 			}
@@ -152,6 +153,7 @@ rhit.PageManager = class {
 				connectionInfo.isRetrying = false;
 				console.log(`🔌✔ Connection re-formed after ${connectionInfo.retryCounter} tries!`);
 				connectionInfo.retryCounter = 0;
+				this.hideReconnectPane();
 			} else {
 				console.log("🔌 New connection formed!", event);
 			}
@@ -259,7 +261,8 @@ rhit.PageManager = class {
 	}
 
 	attemptReconnect() {
-		if (connectionInfo.retryCounter + 1 > MAX_RETRIES) {
+		const thisAttemptNum = connectionInfo.retryCounter + 1;
+		if (thisAttemptNum > MAX_RETRIES) {
 			alert(`Failed to re-establish connection to game server after ${MAX_RETRIES} tries`);
 			clearInterval(connectionInfo.heartbeatHandler); // TODO this doesn't seem to always clear it?
 		} else {
@@ -270,6 +273,7 @@ rhit.PageManager = class {
 				this.connectToWsServer();
 			}, RETRY_DELAY_MS);
 		}
+		this.showReconnectPane(thisAttemptNum, false);
 	}
 
 	sendMessage(purpose, data) {
@@ -312,6 +316,24 @@ rhit.PageManager = class {
 			const answer = array[index];
 			document.querySelector(`#answerButton${index}`).innerHTML = answer;
 		}
+	}
+
+	showReconnectPane(thisAttemptNum, connectionFailed) {
+		console.log("Showing pane");
+		const pane = document.querySelector("#reconnectingPanel");
+		document.querySelector("body").style.background = "#919191";
+		pane.style.visibility = "visible";
+		if (connectionFailed) {
+			pane.innerHTML = `Connect failed (refresh page?)`;
+		} else {
+			pane.innerHTML = `Reconnecting (try ${thisAttemptNum} of ${MAX_RETRIES})`;
+		}
+	}
+
+	hideReconnectPane() {
+		console.log("Hiding pane");
+		document.querySelector("#reconnectingPanel").style.visibility = "hidden";
+		document.querySelector("body").style.background = "#DDDDDD";
 	}
 
 	answerButtonPressed(index) {
