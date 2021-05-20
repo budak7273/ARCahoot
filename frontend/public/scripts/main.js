@@ -17,6 +17,9 @@ var connectionInfo = {
 	isRetrying: false,
 	wasEverConnected: false,
 	retryCounter: 0,
+	heartbeatHandler: () => {
+		console.warn("Heartbeat fired when not yet set up");
+	},
 };
 /* eslint-enable no-var */
 
@@ -25,6 +28,7 @@ rhit.PageManagerSingleton = "";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
+const HEARTBEAT_INTERVAL_MS = 10000;
 
 // From https://stackoverflow.com/a/35385518/12693560
 /**
@@ -107,6 +111,15 @@ rhit.PageManager = class {
 		});
 	}
 
+	sendHeartbeatPing() {
+		if (socket.readyState == 1) {
+			console.log("💓 Heartbeat");
+			rhit.PageManagerSingleton.sendMessage("heartbeat", {});
+		} else {
+			console.warn("🖤 Could not heartbeat, connection was in state", socket.readyState);
+		}
+	}
+
 	updateConnectionInfo(uuid, name, colorHex) {
 		connectionInfo.uuid = uuid;
 		connectionInfo.name = name;
@@ -141,6 +154,13 @@ rhit.PageManager = class {
 				connectionInfo.retryCounter = 0;
 			} else {
 				console.log("🔌 New connection formed!", event);
+			}
+			if (connectionInfo.wasEverConnected) {
+				console.log("Not starting new heartbeat");
+			} else {
+				console.log("Starting new heartbeat");
+				connectionInfo.heartbeatHandler = this.sendHeartbeatPing;
+				setInterval(connectionInfo.heartbeatHandler, HEARTBEAT_INTERVAL_MS);
 			}
 		});
 
@@ -188,7 +208,7 @@ rhit.PageManager = class {
 				this.updateConnectionInfo(message.Data.uuid, message.Data.name, message.Data.color);
 				break;
 			case "reconnect_me_deny":
-				console.log("Denied reconnect. Using new UUID %s instead.", message.Data);
+				console.log("Denied reconnect. Using new UUID %s instead.", message.Data.uuid);
 				this.updateConnectionInfo(message.Data.uuid, message.Data.name, message.Data.color);
 				break;
 			case "start_game":
@@ -241,6 +261,7 @@ rhit.PageManager = class {
 	attemptReconnect() {
 		if (connectionInfo.retryCounter + 1 > MAX_RETRIES) {
 			alert(`Failed to re-establish connection to game server after ${MAX_RETRIES} tries`);
+			clearInterval(connectionInfo.heartbeatHandler); // TODO this doesn't seem to always clear it?
 		} else {
 			connectionInfo.isRetrying = true;
 			connectionInfo.retryCounter++;

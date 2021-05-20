@@ -129,6 +129,11 @@ User = class {
 		this.score = 0;
 		this.color = randomColorGoldenRatio(0.8, 0.75).hexString();
 		this.lastWasCorrect = false;
+		this.lastHeartbeat = Date.now();
+	}
+
+	updateLastHeartbeat() {
+		this.lastHeartbeat = Date.now();
 	}
 };
 
@@ -202,7 +207,9 @@ wss.on('connection', (ws, req) => {
 		try {
 			try {
 				message = JSON.parse(messageRaw);
-				console.log("🔌 Got message:", message.Purpose, message.Data);
+				if (message.Purpose !== "heartbeat") {
+					console.log("🔌 Got message:", message.Purpose, message.Data);
+				}
 			} catch (error) {
 				console.warn("Message was not in JSON form: ", messageRaw);
 				return;
@@ -255,6 +262,15 @@ wss.on('connection', (ws, req) => {
 				});
 				console.log("Next round fired");
 				senderRoom.nextRound();
+				break;
+			case "heartbeat":
+				// TODO kill clients that haven't had heartbeat
+				if (senderUser) {
+					// console.log("Heartbeat from", senderUser.name);
+					senderUser.updateLastHeartbeat();
+				} else {
+					console.warn("Heartbeat from unknown user!", message.Data);
+				}
 				break;
 			case "reconnect_me":
 				const uuidOfReplacement = message.UUID;
