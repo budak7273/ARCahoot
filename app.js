@@ -240,6 +240,10 @@ app.get("/info/rooms", (req, res) => {
 	res.json({rooms: rooms});
 });
 
+app.get("/info/cheater", (req, res) => {
+	res.json({questions: questionData});
+});
+
 const server = app.listen(ws_port, () => {
 	console.log("Express server started on", ws_port);
 });
