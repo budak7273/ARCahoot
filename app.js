@@ -32,7 +32,7 @@ const questionData = [
 		correctAnswerIndex: 0,
 	},
 	{
-		question: "What port is your client's websocket connected to the server with?",
+		question: "What port is your client's websocket currently connected to this server with?",
 		answers: ["5000", "8000", "1000", "Who knows?"],
 		correctAnswerIndex: 3,
 	},
@@ -47,8 +47,8 @@ const questionData = [
 		correctAnswerIndex: 3,
 	},
 	{
-		question: "What did we create in lab 3?",
-		answers: ["Server", "Proxy", "Dice Game", "Did not submit it :)"],
+		question: "What service did we create in Lab 3?",
+		answers: ["Server", "Proxy", "Dice Game", "Metaltooth"],
 		correctAnswerIndex: 1,
 	},
 	{
@@ -57,27 +57,27 @@ const questionData = [
 		correctAnswerIndex: 2,
 	},
 	{
-		question: "Which of the following is true about an AVL Tree?",
-		answers: ["It has Red and Black Nodes", "It has a worst search time of O(n)", "It is self balancing", "It's root node can never change"],
+		question: "Which of the following is true about AVL Trees?",
+		answers: ["It has Red and Black Nodes", "It has a worst search time of O(n)", "It is self balancing", "Its root node can never change"],
 		correctAnswerIndex: 2,
 	},
 	{
-		question: "What did we create in lab 1?",
+		question: "What did we create in Lab 1?",
 		answers: ["Client and Echo Server", "Client and Server sending/requesting files to/from each other", "A Website", "Java Game"],
 		correctAnswerIndex: 0,
 	},
 	{
-		question: "What was the coding language that Dr. Wilkin encouraged us to use for incentive points on labs?",
+		question: "What programming language did Aaron Wilkin encourage us to use for incentive points on labs?",
 		answers: ["Pyhton", "Java", "C#", "C"],
 		correctAnswerIndex: 3,
 	},
 	{
-		question: "What is the name for Rose-Hulman's Library?",
+		question: "What is the name of the Rose-Hulman Library?",
 		answers: ["Luis", "Larry", "Logan", "Lame"],
 		correctAnswerIndex: 2,
 	},
 	{
-		question: "In the song 'Fireflies' by Owl City, it says 'You would not believe your eyes, if ____ fireflies, lit up the world as I fell asleep... How many fireflies did he say?",
+		question: "In the song 'Fireflies' by Owl City, it says 'You would not believe your eyes, if ____ fireflies, lit up the world as I fell asleep... How many fireflies were there?",
 		answers: ["1 million", "10 million", "100 million", "10 thousand"],
 		correctAnswerIndex: 1,
 	},
