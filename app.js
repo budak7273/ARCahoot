@@ -17,8 +17,8 @@ if (ws_port == null || ws_port == "") {
 }
 console.log("Set to port:", ws_port);
 
-const KILL_INACTIVE_USERS_INTERVAL_MS = 5000;
-const INACTIVE_USER_MAX_LAST_PING_DIFFERENCE_MS = 20000;
+const KILL_INACTIVE_USERS_INTERVAL_MS = 10000;
+const INACTIVE_USER_MAX_LAST_PING_DIFFERENCE_MS = 40000;
 
 const questionData = [
 	{
@@ -301,6 +301,8 @@ wss.on('connection', (ws, req) => {
 					console.log("Allowed client to reconnect");
 
 					correspondingUser.socket = ws;
+					ws_to_uuids[ws] = correspondingUser.uuid;
+					correspondingUser.updateLastHeartbeat();
 					sendJson(ws, "reconnect_me_confirm", {
 						uuid: uuidOfOldUser,
 						name: correspondingUser.name,
