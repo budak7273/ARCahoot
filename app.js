@@ -47,6 +47,46 @@ const questionData = [
 		correctAnswerIndex: 3,
 	},
 	{
+		question: "What did we create in lab 3?",
+		answers: ["Server", "Proxy", "Dice Game", "Did not submit it :)"],
+		correctAnswerIndex: 1,
+	},
+	{
+		question: "What toy were you told to describe your code to in order to help debug?",
+		answers: ["Fox", "Aaron Wilkin", "Duck", "Cat"],
+		correctAnswerIndex: 2,
+	},
+	{
+		question: "Which of the following is true about an AVL Tree?",
+		answers: ["It has Red and Black Nodes", "It has a worst search time of O(n)", "It is self balancing", "It's root node can never change"],
+		correctAnswerIndex: 2,
+	},
+	{
+		question: "What did we create in lab 1?",
+		answers: ["Client and Echo Server", "Client and Server sending/requesting files to/from each other", "A Website", "Java Game"],
+		correctAnswerIndex: 0,
+	},
+	{
+		question: "What was the coding language that Dr. Wilkin encouraged us to use for incentive points on labs?",
+		answers: ["Pyhton", "Java", "C#", "C"],
+		correctAnswerIndex: 1,
+	},
+	{
+		question: "What is the name for Rose-Hulman's Library?",
+		answers: ["Luis", "Larry", "Logan", "Lame"],
+		correctAnswerIndex: 2,
+	},
+	{
+		question: "In the song 'Fireflies' by Owl City, it says 'You would not believe your eyes, if ____ fireflies, lit up the world as I fell asleep... How many fireflies did he say?",
+		answers: ["1 million", "10 million", "100 million", "10 thousand"],
+		correctAnswerIndex: 1,
+	},
+	{
+		question: "What is the United States national bird?",
+		answers: ["Eagle", "Crow", "Apple", "Cardinal"],
+		correctAnswerIndex: 0,
+	},
+	{
 		question: "What does the back of Aaron Wilkin's \"I get to teach\" shirt say?",
 		answers: ["I get to grade", "I'm paid to grade", "I'm paid to teach", "I love to grade"],
 		correctAnswerIndex: 1,
