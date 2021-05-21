@@ -1,6 +1,14 @@
 # ARCahoot
 
+Multi-client online quiz game, in the vein of Kahoot, written to learn about using websockets.
+
 Find the live site at [https://arcahoot.web.app/](https://arcahoot.web.app/)
+
+To become the game host, add `?perm=button` to the end of the URL, like this: [https://arcahoot.web.app/?perm=button]https://arcahoot.web.app/?perm=button
+
+Right now every player joins the same 'room,' and the questions are always in the same order. This might be changed down the line if we decide to keep working on this.
+
+Reconnecting logic exists for clients - if a client has not been connected for 40 seconds, they will be dropped.
 
 The backend Node.js server is deployed via a free Heroku dyno that can be accessed [here](https://arcahoot.herokuapp.com/).
 
