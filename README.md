@@ -4,7 +4,7 @@ Multi-client online quiz game, in the vein of Kahoot, written to learn about usi
 
 Find the live site at [https://arcahoot.web.app/](https://arcahoot.web.app/)
 
-To become the game host, add `?perm=button` to the end of the URL, like this: [https://arcahoot.web.app/?perm=button]https://arcahoot.web.app/?perm=button
+To become the game host, add `?perm=button` to the end of the URL, like this: [https://arcahoot.web.app/?perm=button](https://arcahoot.web.app/?perm=button)
 
 Right now every player joins the same 'room,' and the questions are always in the same order. This might be changed down the line if we decide to keep working on this.
 
