@@ -69,7 +69,7 @@ const questionData = [
 	{
 		question: "What was the coding language that Dr. Wilkin encouraged us to use for incentive points on labs?",
 		answers: ["Pyhton", "Java", "C#", "C"],
-		correctAnswerIndex: 1,
+		correctAnswerIndex: 3,
 	},
 	{
 		question: "What is the name for Rose-Hulman's Library?",
