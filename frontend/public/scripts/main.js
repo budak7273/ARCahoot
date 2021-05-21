@@ -109,6 +109,7 @@ rhit.PageManager = class {
 			playerCard.style.color = data.color;
 			playerList.appendChild(playerCard);
 		});
+		document.querySelector("#currentlyPlayingNum").innerHTML = `(${playerData.length})`;
 	}
 
 	sendHeartbeatPing() {
