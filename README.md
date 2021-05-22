@@ -1,6 +1,6 @@
 # ARCahoot
 
-Multi-client online quiz game, in the vein of Kahoot, written to learn about using websockets.
+Multi-client online quiz game, in the style of Kahoot, written to learn about using websockets.
 
 Find the live site at [https://arcahoot.web.app/](https://arcahoot.web.app/)
 
@@ -11,6 +11,23 @@ Right now every player joins the same 'room,' and the questions are always in th
 Reconnecting logic exists for clients - if a client has not been connected for 40 seconds, they will be dropped.
 
 The backend Node.js server is deployed via a free Heroku dyno that can be accessed [here](https://arcahoot.herokuapp.com/).
+
+## Turn-in Info
+
+[Link to our repo](https://github.com/budak7273/arcahoot)
+
+Since we presented in class, we did not record a demo video.
+
+In our zipped turn-in copy, we have left out the node_modules folder to cut down on zip size.
+
+Packages we used:
+
+- [Firebase Hosting](https://firebase.google.com/docs/hosting) to host our frontend page
+- [express](https://www.npmjs.com/package/express) for hosting the HTTP server to open the websocket connection with
+- [ws](https://www.npmjs.com/package/ws) for the Node.js websocket
+- [random-color](https://www.npmjs.com/package/random-color) to generate player colors
+- [project-name-generator](https://www.npmjs.com/package/project-name-generator) to generate player names
+- [uuid](https://www.npmjs.com/package/uuid) to generate UUIDs for players for reconnect identification
 
 ## ARCahoot-frontend
 

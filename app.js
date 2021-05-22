@@ -77,7 +77,8 @@ const questionData = [
 		correctAnswerIndex: 2,
 	},
 	{
-		question: "In the song 'Fireflies' by Owl City, it says 'You would not believe your eyes, if ____ fireflies, lit up the world as I fell asleep... How many fireflies were there?",
+		question: "In the song 'Fireflies' by Owl City, it says 'You would not believe your eyes," +
+						" if ____ fireflies, lit up the world as I fell asleep... How many fireflies were there?",
 		answers: ["1 million", "10 million", "100 million", "10 thousand"],
 		correctAnswerIndex: 1,
 	},
@@ -172,7 +173,7 @@ Room = class {
 				killed.push(userObj);
 			}
 		});
-		// needs to happen in new loop so this.players isn't modified during run
+		// needs to happen in a new loop so this.players isn't modified during run
 		killed.forEach((userObj) => {
 			releaseClient(userObj.uuid, userObj.socket);
 		});
@@ -252,7 +253,6 @@ const server = app.listen(ws_port, () => {
 // Start of websocket upgrade server, re-using the above http server
 const wss = new WebSocket.Server({server: server});
 
-// wss.on('connection', function connection(ws, req) {
 wss.on('connection', (ws, req) => {
 	console.log("Connection established with", ws._socket.remoteAddress);
 
@@ -288,7 +288,6 @@ wss.on('connection', (ws, req) => {
 				break;
 			case "request_question_for_all":
 				const question = senderRoom.getQuestion();
-				console.log("Question is", question);
 				sendJsonToAllUsers("question_info", {
 					question: question.question,
 					answers: question.answers,
@@ -327,9 +326,7 @@ wss.on('connection', (ws, req) => {
 				senderRoom.nextRound();
 				break;
 			case "heartbeat":
-				// TODO kill clients that haven't had heartbeat
 				if (senderUser) {
-					// console.log("Heartbeat from", senderUser.name);
 					senderUser.updateLastHeartbeat();
 				} else {
 					console.warn("Heartbeat from unknown user!", message.Data);
@@ -389,20 +386,18 @@ wss.on('connection', (ws, req) => {
 		}
 	});
 
-	// Needs to be a function, not a lambda, so that `this` is properly bound?
+	// We can't tell what websocket was actually closed when this event fires
+	// (because `ws` gets rebound to the last opened client socket, weird scope stuff)
+	// so we can't tell who actually lost connection.
+	// Leave the job of killing dead users to to room's
+	// killInactiveUsers function run via setInterval instead.
 	ws.on('close', function close(params) {
-		// TODO detect which websocket/user it was so we can remove user from the players list
-		// `ws` is just the last created socket ... won't work long term
-		// so is `this` :(
 		// https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
-		// console.log("===================THIS is ", this);
-		const uuid = ws_to_uuids[this];
-		const associatedPlayer = uuid_to_user[uuid];
-		const associatedPlayerName = (associatedPlayer) ? associatedPlayer.name : "NULL_PLAYER";
-		console.log("Player %s lost connection?", associatedPlayerName);
-		// const uuid = "<TODO better close message>";
-		console.log("❌ Connection to TODO FIX'%s' closed with status %s", associatedPlayerName, params);
-		// releaseClient(uuid, this);
+		// const uuid = ws_to_uuids[this];
+		// const associatedPlayer = uuid_to_user[uuid];
+		// const associatedPlayerName = (associatedPlayer) ? associatedPlayer.name : "NULL_PLAYER";
+		// console.log("Player %s lost connection?", associatedPlayerName);
+		console.log("❌ A connection closed with status %s", params);
 	});
 });
 
@@ -418,8 +413,10 @@ const addNewClient = (ws) => {
 	return freshUser;
 };
 
+// Deletes the User and relevant data structures, for closing a connection
+// Since we only ever use this to close connections that already died,
+// we don't need to close the socket in here.
 const releaseClient = (uuid, ws) => {
-	// Further closing logic?
 	const clientIndex = rooms.DEFAULT_ROOM.players.indexOf(uuid_to_user[uuid]);
 	delete ws_to_uuids[ws];
 	delete uuid_to_user[uuid];
@@ -444,16 +441,6 @@ const sendJsonToAllUsers = (purpose, data) => {
 			sendJson(item.socket, purpose, data);
 		}
 	}
-
-	// Shouldn't need this?
-	// wss.clients.forEach(function each(client) {
-	// 	if (client.readyState === WebSocket.OPEN) {
-	// 		sendJson(ws, "question_info", {
-	// 			question: questionData[indexToAll].question,
-	// 			answers: questionData[indexToAll].answers,
-	// 		});
-	// 	}
-	// });
 };
 
 const makeRoomKey = () => {
